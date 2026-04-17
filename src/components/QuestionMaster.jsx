@@ -9,7 +9,9 @@ const BADGE_COLORS = {
   D: { bg: "#fee2e2", color: "#b91c1c" },
 };
 
-const BASE_URL = "https://testreview.kassapos.in";  // no trailing slash
+//const BASE_URL = "http://localhost:44300";  // no trailing slash
+
+const BASE_URL = "https://testapi.kassapos.co.in";
 
 async function api(endpoint, body = {}) {
   try {

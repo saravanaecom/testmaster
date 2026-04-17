@@ -31,7 +31,8 @@ const Login = () => {
     }
 
     try {
-      const res = await fetch("https://testapi.kassapos.co.in/api/SupportApp/Login", {
+      //const res = await fetch("http://localhost:44300/api/SupportApp/Login", {
+        const res = await fetch("https://testapi.kassapos.co.in/api/SupportApp/Login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
