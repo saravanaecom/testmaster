@@ -18,7 +18,7 @@ const Signup = () => {
   });
 
   useEffect(() => {
-    fetch("http://localhost:44300/api/SupportApp/GetRoles")
+    fetch("https://testreview.kassapos.in/api/SupportApp/GetRoles")
       .then((res) => res.json())
       .then((data) => {
         console.log("GetRoles response:", data); // keep for debugging
@@ -60,7 +60,7 @@ const Signup = () => {
     }
 
     try {
-      const res = await fetch("http://localhost:44300/api/SupportApp/Signup", {
+      const res = await fetch("https://testreview.kassapos.in/api/SupportApp/Signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

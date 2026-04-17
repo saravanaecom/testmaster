@@ -5,9 +5,9 @@ import "../TestMaster.css";
 // CONSTANTS
 // ─────────────────────────────────────────
 const OPTION_KEYS  = ["A", "B", "C", "D"];
-const API_BASE     = "http://localhost:44300/api/SupportApp";
-const UPLOAD_BASE  = "http://localhost:44300/api/Commonapp/UploadFile";
-const IMG_BASE_URL = "http://localhost:44300";
+const API_BASE     = "https://testreview.kassapos.in/api/SupportApp";
+const UPLOAD_BASE  = "https://testreview.kassapos.in/api/Commonapp/UploadFile";
+const IMG_BASE_URL = "https://testreview.kassapos.in";
 
 // ─────────────────────────────────────────
 // LIVE DATE HOOK
