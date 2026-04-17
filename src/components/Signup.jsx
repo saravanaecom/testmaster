@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../index.css";
 import { useNavigate } from "react-router-dom";
 import Image from "../assets/image.png";
@@ -8,23 +8,39 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 const Signup = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  const [roles, setRoles] = useState([]);
   const [form, setForm] = useState({
     employeeName: "",
     mobileNumber: "",
     password: "",
-    roleType: "",
-    testLevel:"Level1",
+    roleId: "",
+    testLevel: "LEVEL1",
   });
+
+  useEffect(() => {
+    fetch("http://localhost:44300/api/SupportApp/GetRoles")
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("GetRoles response:", data); // keep for debugging
+
+        // ✅ FIXED: Backend now uses Data3; fallback to Data just in case
+        const roleList = data.Data3 || data.Data || [];
+        if (Array.isArray(roleList) && roleList.length > 0) {
+          setRoles(roleList);
+        } else {
+          console.warn("No roles returned from API:", data);
+        }
+      })
+      .catch((err) => console.error("Error fetching roles:", err));
+  }, []);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-  
       const formEl = e.target.form;
       const index = [...formEl.elements].indexOf(e.target);
-  
       if (index === formEl.elements.length - 1) {
-        handleSignup(); // submit
+        handleSignup();
       } else if (index > -1) {
         formEl.elements[index + 1].focus();
       }
@@ -36,29 +52,28 @@ const Signup = () => {
   };
 
   const handleSignup = async () => {
-    const { employeeName, mobileNumber, password, roleType, testLevel } = form;
-  
-    if (!employeeName || !mobileNumber || !password || !roleType) {
+    const { employeeName, mobileNumber, password, roleId, testLevel } = form;
+
+    if (!employeeName || !mobileNumber || !password || !roleId) {
       alert("Please fill all fields");
       return;
     }
-  
+
     try {
-      const res = await fetch("https://testapi.kassapos.co.in/api/SupportApp/Signup", {
+      const res = await fetch("http://localhost:44300/api/SupportApp/Signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           EmployeeName: employeeName,
           MobileNo: mobileNumber,
           Password: password,
-          RoleType: roleType,
-          TestLevel: testLevel
+          RoleMasterRefid: parseInt(roleId),
+          TestLevel: testLevel,
         }),
       });
-  
+
       const data = await res.json();
-  
-      // ✅ check backend IsSuccess
+
       if (data.IsSuccess) {
         alert("Account created successfully!");
         navigate("/");
@@ -117,41 +132,42 @@ const Signup = () => {
               <div className="pass-input-div input-group">
                 <span className="input-icon">🔑</span>
                 <input
-  type={showPassword ? "text" : "password"}
-  name="password"
-  placeholder="Password"
-  autoComplete="new-password"
-  value={form.password}
-  onChange={handleChange}
-  onKeyDown={handleKeyDown}
-/>
+                  type={showPassword ? "text" : "password"}
+                  name="password"
+                  placeholder="Password"
+                  autoComplete="new-password"
+                  value={form.password}
+                  onChange={handleChange}
+                  onKeyDown={handleKeyDown}
+                />
                 {showPassword
                   ? <FaEyeSlash onClick={() => setShowPassword(!showPassword)} />
                   : <FaEye onClick={() => setShowPassword(!showPassword)} />
                 }
               </div>
 
-              {/* Role Type */}
-              <div className="input-group">
+              {/* Role Dropdown */}
+              <div className="input-group" style={{ marginBottom: "16px" }}>
                 <span className="input-icon">🏷️</span>
                 <select
-                  name="roleType"
-                  className="role-select"
-                  value={form.roleType}
+                  name="roleId"
+                  value={form.roleId}
                   onChange={handleChange}
-                  onKeyDown={handleKeyDown}
+                  className="role-select"
                 >
-                  <option value="">Select Role Type</option>
-                  <option value="Support">Support</option>
-                  <option value="Implementation">Implementation</option>
-                  <option value="Sales">Sales</option>
+                  <option value="">
+                    {roles.length === 0 ? "Loading roles..." : "Select Role"}
+                  </option>
+                  {roles.map((r) => (
+                    <option key={r.Id} value={r.Id}>
+                      {r.RoleName}
+                    </option>
+                  ))}
                 </select>
               </div>
 
               <div className="login-center-buttons">
-                <button type="button" onClick={handleSignup}
-                onKeyDown={handleKeyDown}>
-                
+                <button type="button" onClick={handleSignup}>
                   Register
                 </button>
                 <button
@@ -168,7 +184,7 @@ const Signup = () => {
         </div>
       </div>
 
-      {/* RIGHT: IMAGE — same as login */}
+      {/* RIGHT: IMAGE */}
       <div className="login-left">
         <div className="login-left-overlay">
           <div className="login-left-brand">

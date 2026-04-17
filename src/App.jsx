@@ -1,59 +1,40 @@
-// import { BrowserRouter, Routes, Route } from "react-router-dom";
-// import LevelMaster from "./components/LevelMaster";
-// import QuestionMaster from "./components/QuestionMaster";
-// import EmployeeMaster from"./components/EmployeeMaster";
-// import Signup from "./components/Signup";
-// import TestMaster from"./components/TestMaster"
-
-// function App() {
-//   return (
-//     <BrowserRouter>
-//       <Routes>
-//         <Route path="/" element={<EmployeeMaster />} />
-//         <Route path="/signup" element={<Signup />} />
-//         <Route path="/LevelMaster" element={<LevelMaster />} />
-        
-//         {/* ✅ NEW ROUTE */}
-//         <Route path="/question" element={<QuestionMaster />} />
-//         <Route path="/testmaster" element={<TestMaster />} />
-        
-//       </Routes>
-//     </BrowserRouter>
-//   );
-// }
-
-// export default App;
-
-
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import LevelMaster    from "./components/LevelMaster";
 import QuestionMaster from "./components/QuestionMaster";
 import EmployeeMaster from "./components/EmployeeMaster";
 import Signup         from "./components/Signup";
-import TestMaster     from "./components/TestMaster";
-import ProtectedRoute from "./components/ProtectedRoute";  // ✅ import
-
+import TestMaster     from "./components/TestMaster";       // ✅ NEW
+import ProtectedRoute from "./components/ProtectedRoute";
+import CorrectionsPage from"./components/CorrectionsPage"
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes — login இல்லாமல் access */}
+        {/* ── Public ──────────────────────── */}
         <Route path="/"       element={<EmployeeMaster />} />
         <Route path="/signup" element={<Signup />} />
 
-        {/* Admin only */}
+        {/* ── Admin only ──────────────────── */}
         <Route path="/question" element={
           <ProtectedRoute allowedUserType="Admin">
             <QuestionMaster />
           </ProtectedRoute>
         } />
+
         <Route path="/LevelMaster" element={
           <ProtectedRoute allowedUserType="Admin">
             <LevelMaster />
           </ProtectedRoute>
         } />
 
-        {/* Employee only */}
+        {/* ✅ Review page — Admin picks an employee to review */}
+        <Route path="/corrections" element={
+          <ProtectedRoute allowedUserType="Admin">
+           <CorrectionsPage />
+          </ProtectedRoute>
+        } />
+
+        {/* ── Employee only ───────────────── */}
         <Route path="/testmaster" element={
           <ProtectedRoute allowedUserType="Employee">
             <TestMaster />

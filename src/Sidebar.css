@@ -1,0 +1,172 @@
+/* Sidebar.css */
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
+
+.sb-root {
+  font-family: 'Sora', sans-serif;
+  width: 220px;
+  min-height: 100vh;
+  background: #1e293b;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  transition: width 0.22s ease;
+  position: relative;
+  z-index: 100;
+}
+
+.sb-root--collapsed {
+  width: 60px;
+}
+
+/* ── Brand ── */
+.sb-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  min-height: 64px;
+}
+
+.sb-brand-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #1f65de, #3b82f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(31,101,222,0.4);
+}
+
+.sb-brand-text {
+  flex: 1;
+  overflow: hidden;
+}
+
+.sb-brand-name {
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+}
+
+.sb-brand-sub {
+  color: #64748b;
+  font-size: 10px;
+  margin-top: 1px;
+  white-space: nowrap;
+}
+
+.sb-collapse-btn {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 0 2px;
+  line-height: 1;
+  flex-shrink: 0;
+  transition: color 0.15s;
+}
+.sb-collapse-btn:hover { color: #fff; }
+
+/* ── Nav ── */
+.sb-nav {
+  flex: 1;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.sb-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 1.4px;
+  padding: 0 8px;
+  margin-bottom: 6px;
+  height: 16px;
+}
+
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  width: 100%;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sb-item:hover {
+  background: rgba(255,255,255,0.06);
+  color: #e2e8f0;
+}
+
+.sb-item--active {
+  background: rgba(31,101,222,0.22);
+  color: #60a5fa;
+}
+
+.sb-item--active:hover {
+  background: rgba(31,101,222,0.28);
+}
+
+.sb-item-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+  width: 20px;
+  text-align: center;
+}
+
+.sb-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Footer / Logout ── */
+.sb-footer {
+  padding: 8px 8px 16px;
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.sb-logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: #ef4444;
+  cursor: pointer;
+  font-family: 'Sora', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  width: 100%;
+  transition: background 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.sb-logout:hover {
+  background: rgba(239,68,68,0.12);
+}

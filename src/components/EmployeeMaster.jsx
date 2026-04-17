@@ -1,25 +1,21 @@
-import React from "react";
+import React, { useState } from "react";
 import "../index.css";
 import { useNavigate } from "react-router-dom";
 import Image from "../assets/image.png";
 import Logo from "../assets/logo.png";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
-import { useState } from "react";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [mobileNumber, setMobileNumber] = useState("");
-  const [password, setPassword] = useState("");
+  const [password, setPassword]         = useState("");
   const navigate = useNavigate();
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
-  
-      const form = e.target.form;
+      const form  = e.target.form;
       const index = [...form.elements].indexOf(e.target);
-  
-      // 👉 last fieldனா → login call
       if (index === form.elements.length - 1) {
         handleLogin();
       } else if (index > -1) {
@@ -33,53 +29,64 @@ const Login = () => {
       alert("Enter Mobile Number & Password");
       return;
     }
-  
+
     try {
-      const res = await fetch("https://testapi.kassapos.co.in/api/SupportApp/Login", {
+      const res = await fetch("http://localhost:44300/api/SupportApp/Login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          MobileNo: mobileNumber,   // must match backend property
-          Password: password
+          MobileNo: mobileNumber,
+          Password: password,
         }),
       });
-  
+
       const data = await res.json();
+
       if (data.IsSuccess) {
-        //localStorage.setItem("user", JSON.stringify(data.Data3));
-        const emp = data.Data3[0]; // ✅ first record எடு
-
-        console.log("LOGIN RAW DATA:", emp);
- 
-  console.log("RoleType:", emp.RoleType);
-  console.log("LevelName:", emp.LevelName);
-
-        // ✅ "employee" key-ல save பண்ணு — TestMaster இதை தான் படிக்குது
-        // handleLogin-ல இந்த line மாத்துங்க:
-localStorage.setItem("employee", JSON.stringify({
-  id:        emp.Id,
-  name:      emp.EmployeeName,
-  dept:      emp.RoleType,
-  roleType:  emp.RoleType,
-  levelName: emp.LevelName,
-  userType:  data.UserType,   // ✅ "Admin" or "Employee" — இதை add பண்ணுங்க
-}));
-
         if (data.UserType === "Employee") {
-        navigate("/TestMaster");
-      } else if (data.UserType === "Admin") {
-        navigate("/question");
+          const emp = data.Data3[0];
+
+          // FIX: Save RoleMasterRefid (int FK) + RoleName (display) instead of old RoleType text.
+          // TestMaster.jsx uses RoleMasterRefid to call SelectQuestionMaster.
+          localStorage.setItem("employee", JSON.stringify({
+            id:               emp.Id,
+            name:             emp.EmployeeName,
+            // FIX: store RoleMasterRefid for API calls
+            RoleMasterRefid:  emp.RoleMasterRefid ?? null,
+            // FIX: store RoleName for display (Topbar dept label)
+            roleName:         emp.RoleName        ?? "",
+            // keep for backward compatibility display in Topbar
+            dept:             emp.RoleName        ?? "",
+            levelName:        emp.LevelName  ,
+            LevelMasterRefid: emp.LevelMasterRefid ?? null,
+            testStatus:       emp.TestStatus       ?? 0,
+            userType:         data.UserType,
+          }));
+
+          navigate("/TestMaster");
+
+        } else if (data.UserType === "Admin") {
+          const admin = data.Data3[0];
+          localStorage.setItem("employee", JSON.stringify({
+            id:       admin.Id,
+            name:     admin.MobileNo || "Admin",
+            userType: "Admin",
+          }));
+          navigate("/question");
+
+        } else {
+          alert("Unknown user type. Contact admin.");
+        }
+
       } else {
-        
+        alert(data.Message || "Invalid Mobile or Password");
       }
-    } else {
-      alert(data.Message || "Invalid Mobile or Password");
+
+    } catch (err) {
+      console.error("Login ERROR:", err);
+      alert("Server Error");
     }
-  } catch (err) {
-    console.error("Login ERROR:", err);
-    alert("Server Error");
-  }
-};
+  };
 
   return (
     <div className="login-main">
@@ -102,18 +109,20 @@ localStorage.setItem("employee", JSON.stringify({
                 <input
                   type="text"
                   placeholder="Mobile Number"
-                  onChange={(e) => setMobileNumber(e.target.value)}onKeyDown={handleKeyDown}
+                  onChange={(e) => setMobileNumber(e.target.value)}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
 
               <div className="pass-input-div input-group">
                 <span className="input-icon">🔑</span>
                 <input
-  type={showPassword ? "text" : "password"}
-  placeholder="Password"
-  autoComplete="current-password"
-  onChange={(e) => setPassword(e.target.value)}onKeyDown={handleKeyDown}
-/>
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  autoComplete="current-password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                />
                 {showPassword
                   ? <FaEyeSlash onClick={() => setShowPassword(!showPassword)} />
                   : <FaEye onClick={() => setShowPassword(!showPassword)} />
@@ -121,7 +130,7 @@ localStorage.setItem("employee", JSON.stringify({
               </div>
 
               <div className="login-center-buttons">
-                <button type="button" onClick={handleLogin}onKeyDown={handleKeyDown}>
+                <button type="button" onClick={handleLogin} onKeyDown={handleKeyDown}>
                   Log In
                 </button>
                 <button
@@ -163,7 +172,7 @@ localStorage.setItem("employee", JSON.stringify({
             <span className="lfc-icon">🔒</span>
             <div>
               <div className="lfc-title">256-bit</div>
-              <div className="lfc-sub">Encrypted & Secure</div>
+              <div className="lfc-sub">Encrypted &amp; Secure</div>
             </div>
           </div>
         </div>

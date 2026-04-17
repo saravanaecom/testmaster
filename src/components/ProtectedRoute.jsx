@@ -20,4 +20,4 @@ const ProtectedRoute = ({ children, allowedUserType }) => {
   return children;
 };
 
-export default ProtectedRoute;
+export default ProtectedRoute;       

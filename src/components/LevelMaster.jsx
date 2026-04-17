@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import "../LevelMaster.css";
+import "../QuestionMaster.css";
+import AdminLayout from "../components/AdminLayout";
 
-const BASE_URL = "https://testapi.kassapos.co.in/";
+const BASE_URL = "http://localhost:44300/";
 
 async function api(endpoint, body = {}) {
   const url = `${BASE_URL}/api${endpoint}`;
@@ -15,13 +17,13 @@ async function api(endpoint, body = {}) {
   return res.json();
 }
 
-const ROLE_META = {
-  Implementation: { cls: "role-impl",  icon: "⚙️" },
-  Support:        { cls: "role-supp",  icon: "🛡️" },
-  Sales:          { cls: "role-sales", icon: "📈" },
-};
-
+// FIX: RoleBadge now receives roleName (string) from the JOIN, same display logic
 function RoleBadge({ role }) {
+  const ROLE_META = {
+    Implementation: { cls: "role-impl",  icon: "⚙️" },
+    Support:        { cls: "role-supp",  icon: "🛡️" },
+    Sales:          { cls: "role-sales", icon: "📈" },
+  };
   const meta = ROLE_META[role] || { cls: "role-other", icon: "🔷" };
   return (
     <span className={`lm-role-badge ${meta.cls}`}>
@@ -30,49 +32,51 @@ function RoleBadge({ role }) {
   );
 }
 
-const handleKeyDown = (e) => {
-  if (e.key === "Enter") {
-    e.preventDefault();
-
-    const form = e.target.form;
-    const index = [...form.elements].indexOf(e.target);
-
-    // 👉 last fieldனா → add/update call
-    if (index === form.elements.length - 1) {
-      handleAdd();
-    } else if (index > -1) {
-      form.elements[index + 1].focus();
-    }
-  }
-};
-
 export default function LevelMaster() {
-  const [levelName, setLevelName] = useState("");
-  const [roleType, setRoleType]   = useState("");
-  const [data, setData]           = useState([]);
-  const [editId, setEditId]       = useState(null);
-  const [toast, setToast]         = useState(null);
-  const [filter, setFilter]       = useState("");
-  const [loading, setLoading]     = useState(false);
+  const [levelName, setLevelName]           = useState("");
+  // FIX: roleMasterRefid (int) replaces roleType (string)
+  const [roleMasterRefid, setRoleMasterRefid] = useState("");
+  const [roles, setRoles]                   = useState([]);   // from GetRoles API
+  const [data, setData]                     = useState([]);
+  const [editId, setEditId]                 = useState(null);
+  const [toast, setToast]                   = useState(null);
+  const [filter, setFilter]                 = useState("");   // filter by RoleMasterRefid
+  const [loading, setLoading]               = useState(false);
 
   const showToast = (msg, icon = "✅") => {
     setToast({ msg, icon });
     setTimeout(() => setToast(null), 3000);
   };
 
-  // ─── LOAD ──────────────────────────────────────────────────
+  // ── Load Roles from RoleMaster ──────────────────────────
+  const loadRoles = async () => {
+    try {
+      const res  = await fetch(`${BASE_URL}api/SupportApp/GetRoles`);
+      const data = await res.json();
+      if (data.IsSuccess && Array.isArray(data.Data3)) {
+        setRoles(data.Data3.map(r => ({ id: r.Id, roleName: r.RoleName })));
+      }
+    } catch {
+      showToast("Could not load roles", "❌");
+    }
+  };
+
+  // ── Load Levels ─────────────────────────────────────────
   const loadLevels = async () => {
     setLoading(true);
     try {
       const res = await api("/SupportApp/SelectLevelMaster");
       if (res.IsSuccess && Array.isArray(res.Data3)) {
-        const mapped = res.Data3.map(r => ({
-          id:        r.Id        ?? r.id,     //fallback logic
-          levelName: r.LevelName ?? r.levelName,
-          roleType:  r.RoleType  ?? r.roleType,
-          active:    r.Active    ?? r.active,
-        }));
-        setData(mapped);
+        setData(
+          res.Data3.map((r) => ({
+            id:             r.Id             ?? r.id,
+            levelName:      r.LevelName      ?? r.levelName,
+            // FIX: store RoleMasterRefid + RoleName (returned by JOIN in service)
+            roleMasterRefid: r.RoleMasterRefid ?? r.roleMasterRefid,
+            roleName:        r.RoleName        ?? r.roleName ?? "",
+            active:          r.Active          ?? r.active,
+          }))
+        );
       } else {
         showToast(res.message || "Failed to load records", "❌");
       }
@@ -83,23 +87,33 @@ export default function LevelMaster() {
     }
   };
 
-  useEffect(() => { loadLevels(); }, []);
+  useEffect(() => {
+    loadRoles();
+    loadLevels();
+  }, []);
 
-  // ─── ADD / UPDATE ──────────────────────────────────────────
   const handleAdd = async () => {
-    if (!levelName || !roleType) {
+    // FIX: validate roleMasterRefid (int) instead of roleType (string)
+    if (!levelName || !roleMasterRefid) {
       showToast("Please fill all fields", "⚠️");
       return;
     }
     try {
       if (editId !== null) {
         const res = await api("/SupportApp/UpdateLevelMaster", {
-          Id: editId, LevelName: levelName, RoleType: roleType,
+          Id:             editId,
+          LevelName:      levelName,
+          // FIX: send RoleMasterRefid (int) instead of RoleType (string)
+          RoleMasterRefid: Number(roleMasterRefid),
         });
         if (res.IsSuccess) {
-          setData(prev =>
-            prev.map(item =>
-              item.id === editId ? { ...item, levelName, roleType } : item
+          // FIX: update local state with roleMasterRefid + roleName
+          const roleName = roles.find(r => String(r.id) === String(roleMasterRefid))?.roleName ?? "";
+          setData((prev) =>
+            prev.map((item) =>
+              item.id === editId
+                ? { ...item, levelName, roleMasterRefid: Number(roleMasterRefid), roleName }
+                : item
             )
           );
           showToast("Record updated successfully", "✏️");
@@ -108,7 +122,9 @@ export default function LevelMaster() {
         }
       } else {
         const res = await api("/SupportApp/InsertLevelMaster", {
-          LevelName: levelName, RoleType: roleType,
+          LevelName:       levelName,
+          // FIX: send RoleMasterRefid (int) instead of RoleType (string)
+          RoleMasterRefid: Number(roleMasterRefid),
         });
         if (res.IsSuccess) {
           await loadLevels();
@@ -120,16 +136,17 @@ export default function LevelMaster() {
     } catch {
       showToast("Network error", "❌");
     }
-    setLevelName(""); setRoleType(""); setEditId(null);
+    setLevelName("");
+    setRoleMasterRefid("");
+    setEditId(null);
   };
 
-  // ─── DELETE ────────────────────────────────────────────────
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this record?")) return;
     try {
       const res = await api("/SupportApp/DeleteLevelMaster", { Id: id });
       if (res.IsSuccess) {
-        setData(prev => prev.filter(item => item.id !== id));
+        setData((prev) => prev.filter((item) => item.id !== id));
         showToast("Record deleted", "🗑️");
       } else {
         showToast(res.message || "Delete failed", "❌");
@@ -139,49 +156,43 @@ export default function LevelMaster() {
     }
   };
 
-  // ─── EDIT ──────────────────────────────────────────────────
   const handleEdit = (item) => {
     setLevelName(item.levelName);
-    setRoleType(item.roleType);
+    // FIX: restore RoleMasterRefid (int as string) not RoleType
+    setRoleMasterRefid(String(item.roleMasterRefid ?? ""));
     setEditId(item.id);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const handleCancel = () => {
-    setLevelName(""); setRoleType(""); setEditId(null);
+    setLevelName("");
+    setRoleMasterRefid("");
+    setEditId(null);
   };
 
-  // ─── STATS & FILTER ────────────────────────────────────────
+  // FIX: stats use roleName (from JOIN) for display grouping
   const roleCounts = data.reduce((acc, item) => {
-    acc[item.roleType] = (acc[item.roleType] || 0) + 1;
+    acc[item.roleName] = (acc[item.roleName] || 0) + 1;
     return acc;
   }, {});
 
+  // FIX: filter by roleMasterRefid (int), not RoleType (string)
   const filteredData = filter
-    ? data.filter(item => item.roleType === filter)
+    ? data.filter((item) => String(item.roleMasterRefid) === String(filter))
     : data;
 
-  // ─── RENDER ────────────────────────────────────────────────
   return (
-    <div className="lm-root">
-      <div className="lm-inner">
+    <AdminLayout title="LEVEL DETAILS" recordCount={data.length} editId={editId}>
 
-        {/* Header */}
-        <div className="lm-header">
-          <div className="lm-header-icon">🏷️</div>
-          <div>
-            <div className="lm-title">Level Master</div>
-            <div className="lm-subtitle">Manage role levels and assignments</div>
-          </div>
-        </div>
+      <div className="lm-inner" style={{ padding: "24px 32px" }}>
 
-        {/* Stats */}
+        {/* ── Stats ── */}
         <div className="lm-stats">
           {[
-            { val: data.length,                       key: "Total Records"  },
-            { val: roleCounts["Implementation"] || 0, key: "Implementation" },
-            { val: roleCounts["Support"]        || 0, key: "Support"        },
-            { val: roleCounts["Sales"]          || 0, key: "Sales"          },
-          ].map(s => (
+            { val: data.length, key: "Total Records" },
+            // FIX: stats keyed by roleName (from JOIN)
+            ...roles.map(r => ({ val: roleCounts[r.roleName] || 0, key: r.roleName })),
+          ].map((s) => (
             <div className="lm-stat" key={s.key}>
               <div className="lm-stat-val">{s.val}</div>
               <div className="lm-stat-key">{s.key}</div>
@@ -189,18 +200,16 @@ export default function LevelMaster() {
           ))}
         </div>
 
-        {/* Form Card */}
+        {/* ── Form Card ── */}
         <div className="lm-card">
           <div className="lm-card-label">
             {editId !== null ? "Edit Record" : "Add New Record"}
           </div>
-
           {editId !== null && (
             <div className="lm-edit-indicator">
               ✏️ Editing record <strong>#{editId}</strong>
             </div>
           )}
-
           <div className="lm-form-grid">
             <div className="lm-field">
               <label>Level Name</label>
@@ -209,27 +218,29 @@ export default function LevelMaster() {
                 type="text"
                 placeholder="e.g. Level 1"
                 value={levelName}
-                onChange={e => setLevelName(e.target.value)}
-                onKeyDown={handleKeyDown}
+                onChange={(e) => setLevelName(e.target.value)}
               />
             </div>
-
             <div className="lm-field">
               <label>Role Type</label>
               <div className="lm-select-wrap">
+                {/* FIX: populated from GetRoles API, value = RoleMasterRefid */}
                 <select
                   className="lm-select"
-                  value={roleType}
-                  onChange={e => setRoleType(e.target.value)}onKeyDown={handleKeyDown}
+                  value={roleMasterRefid}
+                  onChange={(e) => setRoleMasterRefid(e.target.value)}
                 >
-                  <option value="">Select Role</option>
-                  <option value="Implementation">⚙️ Implementation</option>
-                  <option value="Support">🛡️ Support</option>
-                  <option value="Sales">📈 Sales</option>
+                  <option value="">
+                    {roles.length === 0 ? "Loading roles..." : "Select Role"}
+                  </option>
+                  {roles.map(r => (
+                    <option key={r.id} value={r.id}>
+                      {r.roleName}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
-
             <div className="lm-btn-actions">
               <button
                 className={`lm-btn-primary ${editId !== null ? "lm-btn-update" : ""}`}
@@ -245,25 +256,36 @@ export default function LevelMaster() {
             </div>
           </div>
         </div>
- 
-        {/* Table Card */}
-        <div className="lm-card">
 
-          {/* Filter bar */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        {/* ── Table Card ── */}
+        <div className="lm-card">
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 12,
+            }}
+          >
             <div className="lm-card-label" style={{ marginBottom: 0 }}>
-              Records — {filteredData.length}{filter ? ` ${filter}` : ""} entr{filteredData.length === 1 ? "y" : "ies"}
+              Records —{" "}
+              {filteredData.length}
+              {filter
+                ? ` ${roles.find(r => String(r.id) === String(filter))?.roleName ?? ""}`
+                : ""}{" "}
+              entr{filteredData.length === 1 ? "y" : "ies"}
             </div>
             <div className="lm-select-wrap" style={{ minWidth: 180 }}>
+              {/* FIX: filter dropdown uses RoleMasterRefid as value, RoleName as label */}
               <select
                 className="lm-select"
                 value={filter}
-                onChange={e => setFilter(e.target.value)}
+                onChange={(e) => setFilter(e.target.value)}
               >
                 <option value="">All Roles</option>
-                <option value="Implementation">⚙️ Implementation</option>
-                <option value="Support">🛡️ Support</option>
-                <option value="Sales">📈 Sales</option>
+                {roles.map(r => (
+                  <option key={r.id} value={r.id}>{r.roleName}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -285,14 +307,29 @@ export default function LevelMaster() {
                 </thead>
                 <tbody>
                   {filteredData.length > 0 ? (
-                    filteredData.map(item => (
+                    filteredData.map((item) => (
                       <tr key={item.id}>
-                        <td style={{ fontWeight: 500, color: "#0f172a" }}>{item.levelName}</td>
-                        <td><RoleBadge role={item.roleType} /></td>
+                        <td style={{ fontWeight: 500, color: "#0f172a" }}>
+                          {item.levelName}
+                        </td>
+                        <td>
+                          {/* FIX: display roleName (from JOIN) not old roleType text */}
+                          <RoleBadge role={item.roleName} />
+                        </td>
                         <td>
                           <div style={{ display: "flex", gap: 8 }}>
-                            <button className="lm-action-edit" onClick={() => handleEdit(item)}>Edit</button>
-                            <button className="lm-action-del"  onClick={() => handleDelete(item.id)}>Delete</button>
+                            <button
+                              className="lm-action-edit"
+                              onClick={() => handleEdit(item)}
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="lm-action-del"
+                              onClick={() => handleDelete(item.id)}
+                            >
+                              Delete
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -302,7 +339,11 @@ export default function LevelMaster() {
                       <td colSpan={3}>
                         <div className="lm-empty">
                           <div className="lm-empty-icon">📋</div>
-                          <p>{filter ? `No ${filter} records found.` : "No records yet. Add your first level above."}</p>
+                          <p>
+                            {filter
+                              ? `No ${roles.find(r => String(r.id) === String(filter))?.roleName ?? ""} records found.`
+                              : "No records yet. Add your first level above."}
+                          </p>
                         </div>
                       </td>
                     </tr>
@@ -312,14 +353,17 @@ export default function LevelMaster() {
             )}
           </div>
         </div>
+
       </div>
 
+      {/* ── Toast ── */}
       {toast && (
         <div className="lm-toast">
           <span className="lm-toast-icon">{toast.icon}</span>
           {toast.msg}
         </div>
       )}
-    </div>
+
+    </AdminLayout>
   );
 }
