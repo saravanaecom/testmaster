@@ -1,0 +1,790 @@
+/* ============================================================
+   QuestionMaster.css
+   ============================================================ */
+
+   @import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&display=swap');
+
+   *,
+   *::before,
+   *::after {
+     box-sizing: border-box;
+     margin: 0;
+     padding: 0;
+   }
+   
+   /* ── Root ── */
+   .qm-root {
+     font-family: 'Sora', 'Segoe UI', sans-serif;
+     min-height: 100vh;
+     background: #f0f4ff;
+     color: #1e293b;
+   }
+   
+   /* ── Top Bar ── */
+   .qm-topbar {
+     background: #1e293b;
+     padding: 9px 18px;
+     display: flex;
+     justify-content: space-between;
+     align-items: center;
+   }
+   
+   .qm-brand {
+     color: #ffffff;
+     font-weight: 700;
+     font-size: 14px;
+     letter-spacing: 1px;
+   }
+   
+   .qm-user {
+     color: #94a3b8;
+     font-size: 12px;
+   }
+   
+   /* ── Title Strip ── */
+   .qm-title-strip {
+     background: #e2e8f0;
+     border-bottom: 1px solid #cbd5e1;
+     padding: 6px 18px;
+     font-size: 11px;
+     font-weight: 700;
+     letter-spacing: 1.5px;
+     color: #475569;
+     display: flex;
+     align-items: center;
+     gap: 12px;
+   }
+   
+   .qm-edit-badge {
+     background: #fef9c3;
+     color: #a16207;
+     border-radius: 5px;
+     padding: 2px 7px;
+     font-size: 11px;
+     font-weight: 600;
+   }
+   
+   .qm-record-count {
+     margin-left: auto;
+     font-size: 11px;
+     color: #94a3b8;
+     font-weight: 400;
+   }
+   
+   /* ── Form Wrapper ── */
+   .qm-form-wrapper {
+     margin: 12px 12px 0;
+     border: 1px solid #cbd5e1;
+     border-radius: 8px 8px 0 0;
+     overflow: hidden;
+   }
+   
+   .qm-panels {
+     display: grid;
+     grid-template-columns: 1fr 1fr;
+     gap: 1px;
+     background: #cbd5e1;
+   }
+   
+   /* ── Panel ── */
+   .qm-panel {
+     background: #ffffff;
+     padding: 16px 16px;
+     display: flex;
+     flex-direction: column;
+     gap: 0;
+   }
+   
+   /* ── Fields Column (left panel) ── */
+   .qm-fields-col {
+     flex: 1;
+   }
+   
+   .qm-role-row {
+     display: grid;
+     grid-template-columns: 1fr 1fr;
+     gap: 10px;
+     margin-bottom: 0;
+   }
+   
+   /* ── Field Wrapper ── */
+   .qm-field {
+     display: flex;
+     flex-direction: column;
+     gap: 4px;
+     margin-bottom: 11px;
+   }
+   
+   .qm-field-label {
+     font-size: 10px;
+     font-weight: 600;
+     color: #64748b;
+     letter-spacing: 0.6px;
+     text-transform: uppercase;
+   }
+   
+   /* ── Inputs ── */
+   .qm-inp {
+     width: 100%;
+     padding: 7px 9px;
+     border: 1px solid #cbd5e1;
+     border-radius: 6px;
+     font-size: 13px;
+     color: #1e293b;
+     background: #ffffff;
+     outline: none;
+     font-family: inherit;
+     transition: border-color 0.18s, box-shadow 0.18s;
+   }
+   
+   .qm-inp:focus {
+     border-color: rgba(31, 101, 222, 0.5);
+     box-shadow: 0 0 0 3px rgba(31, 101, 222, 0.08);
+   }
+   
+   .qm-inp::placeholder {
+     color: #cbd5e1;
+   }
+   
+   .qm-textarea {
+     resize: vertical;
+     line-height: 1.5;
+   }
+   
+   .qm-inp--green {
+     background: #f0fdf4;
+     border-color: rgba(16, 185, 129, 0.4);
+   }
+   
+   .qm-inp--green:focus {
+     border-color: rgba(16, 185, 129, 0.65);
+     box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08);
+   }
+   
+   /* ── Select ── */
+   .qm-select-wrap {
+     position: relative;
+   }
+   
+   .qm-select-wrap select {
+     appearance: none;
+     -webkit-appearance: none;
+     width: 100%;
+   }
+   
+   .qm-select-arrow {
+     position: absolute;
+     right: 9px;
+     top: 50%;
+     transform: translateY(-50%);
+     color: #94a3b8;
+     font-size: 10px;
+     pointer-events: none;
+   }
+   
+   /* ── Action Buttons Row ── */
+   .qm-actions {
+     display: flex;
+     gap: 10px;
+     margin-top: 12px;
+   }
+   
+   /* ── Buttons ── */
+   .qm-btn {
+     font-family: inherit;
+     cursor: pointer;
+     transition: opacity 0.18s, transform 0.15s;
+   }
+   
+   .qm-btn:hover {
+     opacity: 0.85;
+   }
+   
+   .qm-btn:active {
+     transform: scale(0.97);
+   }
+   
+   .qm-btn-save {
+     background: linear-gradient(135deg, #1f65de, #3b82f6);
+     color: #ffffff;
+     border: none;
+     border-radius: 8px;
+     padding: 9px 20px;
+     font-size: 13px;
+     font-weight: 600;
+     box-shadow: 0 3px 12px rgba(31, 101, 222, 0.3);
+   }
+   
+   .qm-btn-reset {
+     background: #f1f5f9;
+     color: #64748b;
+     border: 1px solid #e2e8f0;
+     border-radius: 8px;
+     padding: 9px 15px;
+     font-size: 13px;
+   }
+   
+   .qm-btn-remove {
+     background: #fee2e2;
+     color: #ef4444;
+     border: 1px solid #fca5a5;
+     border-radius: 6px;
+     padding: 4px 9px;
+     font-size: 11px;
+   }
+   
+   .qm-btn-edit {
+     background: #dbeafe;
+     color: #1d4ed8;
+     border: none;
+     border-radius: 5px;
+     padding: 4px 8px;
+     font-size: 11px;
+     font-weight: 600;
+   }
+   
+   .qm-btn-del {
+     background: #fee2e2;
+     color: #dc2626;
+     border: none;
+     border-radius: 5px;
+     padding: 4px 8px;
+     font-size: 11px;
+     font-weight: 600;
+   }
+   
+   /* ── Image Upload ── */
+   .qm-upload-box {
+     display: flex;
+     flex-direction: row;
+     align-items: center;
+     justify-content: center;
+     gap: 12px;
+     border: 2px dashed rgba(31, 101, 222, 0.35);
+     border-radius: 10px;
+     height: 100px;
+     cursor: pointer;
+     background: #f8faff;
+     text-align: center;
+     transition: border-color 0.18s, background 0.18s;
+     padding: 0 20px;
+   }
+   
+   .qm-upload-box:hover {
+     border-color: #1f65de;
+     background: #eef4ff;
+   }
+   
+   .qm-upload-icon {
+     font-size: 30px;
+   }
+   
+   .qm-upload-text {
+     font-size: 13px;
+     color: #1f65de;
+     font-weight: 600;
+   }
+   
+   .qm-upload-hint {
+     font-size: 11px;
+     color: #94a3b8;
+     margin-top: 3px;
+   }
+   
+   .qm-file-input {
+     display: none;
+   }
+   
+   .qm-img-preview-wrap {
+     display: flex;
+     align-items: center;
+     gap: 12px;
+   }
+   
+   .qm-img-preview {
+     width: 120px;
+     height: 100px;
+     object-fit: cover;
+     border-radius: 8px;
+     border: 2px solid #cbd5e1;
+   }
+   
+   /* ── Options Box ── */
+   .qm-options-box {
+     background: #f8faff;
+     border: 1px solid rgba(31, 101, 222, 0.12);
+     border-radius: 10px;
+     padding: 14px;
+     margin-bottom: 12px;
+     margin-top: 12px;
+   }
+   
+   .qm-sec-label {
+     font-size: 10px;
+     font-weight: 700;
+     color: #94a3b8;
+     letter-spacing: 1.4px;
+     text-transform: uppercase;
+     margin-bottom: 10px;
+   }
+   
+   .qm-sec-label--green {
+     color: #15803d;
+   }
+   
+   .qm-opt-grid {
+     display: grid;
+     grid-template-columns: 1fr 1fr;
+     gap: 10px;
+   }
+   
+   .qm-opt-row {
+     display: flex;
+     align-items: center;
+     gap: 7px;
+   }
+   
+   .qm-opt-badge {
+     width: 26px;
+     height: 26px;
+     border-radius: 6px;
+     flex-shrink: 0;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     font-weight: 700;
+     font-size: 12px;
+   }
+   
+   /* ── Answer Box ── */
+   .qm-answer-box {
+     background: #f0fdf4;
+     border: 1px solid rgba(16, 185, 129, 0.28);
+     border-radius: 10px;
+     padding: 14px;
+   }
+
+   /* ── Input Mode Checkbox Toggle ── */
+   .qm-mode-box {
+     background: #f8faff;
+     border: 1px solid rgba(31, 101, 222, 0.15);
+     border-radius: 10px;
+     padding: 12px 14px;
+     margin-top: 4px;
+     margin-bottom: 2px;
+   }
+
+   .qm-mode-checks {
+     display: flex;
+     flex-direction: column;
+     gap: 10px;
+     margin-top: 8px;
+   }
+
+   .qm-check-label {
+     display: flex;
+     align-items: center;
+     gap: 10px;
+     cursor: pointer;
+     user-select: none;
+   }
+
+   .qm-check-label:hover .qm-check-box {
+     border-color: #1f65de;
+   }
+
+   .qm-custom-check {
+     position: relative;
+     display: inline-flex;
+     align-items: center;
+   }
+
+   .qm-check-input {
+     position: absolute;
+     opacity: 0;
+     width: 0;
+     height: 0;
+     pointer-events: none;
+   }
+
+   .qm-check-box {
+     width: 18px;
+     height: 18px;
+     border: 2px solid #cbd5e1;
+     border-radius: 5px;
+     background: #ffffff;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     transition: border-color 0.18s, background 0.18s;
+     flex-shrink: 0;
+   }
+
+   .qm-check-box--active {
+     background: #1f65de;
+     border-color: #1f65de;
+   }
+
+   .qm-check-tick {
+     color: #ffffff;
+     font-size: 11px;
+     font-weight: 700;
+     line-height: 1;
+   }
+
+   .qm-check-text {
+     font-size: 13px;
+     font-weight: 600;
+     color: #1e293b;
+   }
+
+   .qm-check-desc {
+     font-size: 11px;
+     color: #94a3b8;
+     margin-left: 2px;
+   }
+
+   /* ── Manual Mode Hint (right panel placeholder) ── */
+   .qm-manual-hint {
+     flex: 1;
+     display: flex;
+     flex-direction: column;
+     align-items: center;
+     justify-content: center;
+     gap: 8px;
+     padding: 32px 20px;
+     border: 2px dashed #e2e8f0;
+     border-radius: 10px;
+     margin-top: 12px;
+     text-align: center;
+   }
+
+   .qm-manual-icon {
+     font-size: 28px;
+   }
+
+   .qm-manual-text {
+     font-size: 13px;
+     font-weight: 600;
+     color: #475569;
+   }
+
+   .qm-manual-sub {
+     font-size: 12px;
+     color: #94a3b8;
+   }
+
+   .qm-manual-sub strong {
+     color: #1f65de;
+   }
+   
+   /* ── Data Grid ── */
+   .qm-grid-wrapper {
+     margin: 0 12px 24px;
+     border: 1px solid #cbd5e1;
+     border-top: 2px solid #94a3b8;
+     border-radius: 0 0 8px 8px;
+     overflow-x: auto;
+     background: #ffffff;
+   }
+   
+   .qm-table {
+     width: 100%;
+     border-collapse: collapse;
+     font-size: 12.5px;
+     min-width: 750px;
+   }
+   
+   .qm-th {
+     background: #b2d8d8;
+     color: #1e293b;
+     padding: 9px 11px;
+     text-align: left;
+     font-weight: 700;
+     font-size: 11px;
+     white-space: nowrap;
+     border-bottom: 1px solid #94a3b8;
+     border-right: 1px solid #a8c8c8;
+   }
+   
+   .qm-td {
+     padding: 8px 11px;
+     border-bottom: 1px solid #e2e8f0;
+     vertical-align: middle;
+     border-right: 1px solid #f1f5f9;
+   }
+   
+   .qm-tr--even { background: #f8faff; }
+   .qm-tr--odd  { background: #ffffff; }
+   
+   .qm-tr:hover td {
+     background: #e0eeff;
+     transition: background 0.12s;
+   }
+   
+   .qm-td--center    { text-align: center; }
+   .qm-td--nowrap    { white-space: nowrap; }
+   .qm-td--muted     { color: #64748b; font-size: 12px; }
+   .qm-td--faint     { color: #cbd5e1; }
+   .qm-td--question  { max-width: 180px; }
+   .qm-td--options   { max-width: 200px; }
+   .qm-td--timestamp { white-space: nowrap; font-size: 11px; color: #94a3b8; }
+   
+   .qm-no-data {
+     text-align: center;
+     padding: 52px 0;
+     color: #94a3b8;
+     font-size: 13px;
+   }
+   
+   /* ── Grid Cell Elements ── */
+   .qm-ticket-badge {
+     background: #1e293b;
+     color: #ffffff;
+     border-radius: 5px;
+     padding: 2px 7px;
+     font-size: 11px;
+     font-weight: 700;
+   }
+   
+   .qm-role-pill {
+     border-radius: 6px;
+     padding: 2px 7px;
+     font-size: 11px;
+     font-weight: 600;
+     white-space: nowrap;
+   }
+   
+   .qm-question-text {
+     display: block;
+     overflow: hidden;
+     text-overflow: ellipsis;
+     white-space: nowrap;
+     max-width: 175px;
+   }
+   
+   .qm-option-pills {
+     display: flex;
+     gap: 3px;
+     flex-wrap: wrap;
+   }
+   
+   .qm-opt-pill {
+     border-radius: 4px;
+     padding: 1px 6px;
+     font-size: 11px;
+     font-weight: 500;
+   }
+   
+   .qm-answer-pill {
+     background: #dcfce7;
+     color: #15803d;
+     border-radius: 5px;
+     padding: 2px 8px;
+     font-size: 12px;
+     font-weight: 700;
+   }
+   
+   .qm-grid-img {
+     width: 42px;
+     height: 36px;
+     object-fit: cover;
+     border-radius: 5px;
+     border: 1px solid #e2e8f0;
+     display: block;
+     margin: 0 auto;
+   }
+   
+   /* ── Toast ── */
+   .qm-toast {
+     position: fixed;
+     bottom: 26px;
+     right: 26px;
+     background: #ffffff;
+     border-radius: 10px;
+     padding: 11px 18px;
+     font-size: 13px;
+     display: flex;
+     align-items: center;
+     gap: 10px;
+     box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+     z-index: 9999;
+     animation: qm-slide-up 0.25s ease;
+   }
+   
+   .qm-toast--success { border: 1.5px solid #1f65de; }
+   .qm-toast--warn    { border: 1.5px solid #f59e0b; }
+   
+   @keyframes qm-slide-up {
+     from { opacity: 0; transform: translateY(12px); }
+     to   { opacity: 1; transform: translateY(0); }
+   }
+   
+   /* ── Responsive ── */
+   @media (max-width: 720px) {
+     .qm-panels {
+       grid-template-columns: 1fr;
+     }
+   
+     .qm-role-row {
+       grid-template-columns: 1fr;
+     }
+   
+     .qm-opt-grid {
+       grid-template-columns: 1fr;
+     }
+   
+     .qm-actions {
+       flex-direction: column;
+     }
+   
+     .qm-upload-box {
+       height: auto;
+       padding: 16px;
+       flex-direction: column;
+     }
+   }
+
+
+    /* ── Paste these styles into your QuestionMaster.css ── */
+
+/* ── Grid Filter Bar ───────────────────────────────────── */
+.qm-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 0 14px;
+  flex-wrap: wrap;
+}
+
+.qm-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.qm-filter-btn:hover {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+}
+.qm-filter-btn--active {
+  border-color: #3b82f6;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+/* Role-specific active colours */
+.qm-filter-btn--support.qm-filter-btn--active {
+  border-color: #3b82f6;
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.qm-filter-btn--implementation.qm-filter-btn--active {
+  border-color: #ca8a04;
+  background: #fef9c3;
+  color: #a16207;
+}
+.qm-filter-btn--sales.qm-filter-btn--active {
+  border-color: #16a34a;
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.qm-filter-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 10px;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+}
+.qm-filter-btn--active .qm-filter-count {
+  background: rgba(59,130,246,0.18);
+  color: #1d4ed8;
+}
+.qm-filter-btn--sales.qm-filter-btn--active .qm-filter-count {
+  background: rgba(22,163,74,0.15);
+  color: #15803d;
+}
+.qm-filter-btn--implementation.qm-filter-btn--active .qm-filter-count {
+  background: rgba(202,138,4,0.15);
+  color: #a16207;
+}
+
+.qm-filter-info {
+  margin-left: auto;
+  font-size: 12px;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* ── Small Upload Button ───────────────────────────────── */
+.qm-upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+}
+
+.qm-btn-upload-sm {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  border: 1.5px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-top: 6px;
+}
+.qm-btn-upload-sm:hover {
+  border-color: #94a3b8;
+  background: #f1f5f9;
+  color: #1d4ed8;
+}
+.qm-btn-upload-sm input[type="file"] {
+  display: none;
+}
+
+/* ── Image actions row (Change + Remove) ──────────────── */
+.qm-img-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.qm-file-picker {
+  font-size: 13px;
+  color: #475569;
+  border: 1.5px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 4px 8px;
+  background: #f8fafc;
+  cursor: pointer;
+}
+.qm-file-picker::-webkit-file-upload-button {
+  padding: 4px 10px;
+  border: none;
+  border-radius: 4px;
+  background: #e2e8f0;
+  color: #334155;
+  font-size: 12px;
+  cursor: pointer;
+}

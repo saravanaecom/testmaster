@@ -1,0 +1,413 @@
+/* ══════════════════════════════════════════════
+   CorrectionsPage.css
+   Matches your QuestionMaster.css design system
+══════════════════════════════════════════════ */
+
+/* ── Root ── */
+.cp-root {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  font-family: "Segoe UI", system-ui, sans-serif;
+}
+
+/* ── Page Header ── */
+.cp-page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 4px;
+}
+.cp-page-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 4px;
+  letter-spacing: -0.01em;
+}
+.cp-page-sub {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ── Card ── */
+.cp-card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1.5px solid #e2e8f0;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  padding: 22px 24px;
+}
+
+.cp-card-title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+/* ── Step Badge ── */
+.cp-step-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* ── Search Row ── */
+.cp-search-row {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.cp-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 160px;
+}
+
+.cp-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #475569;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.cp-input {
+  padding: 9px 13px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 9px;
+  font-size: 0.88rem;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.18s, box-shadow 0.18s;
+  background: #f8fafc;
+}
+.cp-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  background: #fff;
+}
+.cp-input--sm {
+  padding: 7px 11px;
+  font-size: 0.82rem;
+}
+
+/* ── Buttons ── */
+.cp-btn {
+  padding: 9px 18px;
+  border-radius: 9px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.cp-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.cp-btn--primary {
+  background: #0f172a;
+  color: #fff;
+}
+.cp-btn--primary:hover:not(:disabled) {
+  background: #1e293b;
+}
+
+.cp-btn--ghost {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1.5px solid #e2e8f0;
+}
+.cp-btn--ghost:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.cp-btn--approve {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1.5px solid #86efac;
+}
+.cp-btn--approve:hover:not(:disabled) {
+  background: #bbf7d0;
+}
+
+.cp-btn--reject {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: 1.5px solid #fca5a5;
+}
+.cp-btn--reject:hover:not(:disabled) {
+  background: #fecaca;
+}
+
+.cp-btn--sm {
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  border-radius: 7px;
+}
+
+/* ── Employee List ── */
+.cp-emp-list {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.cp-emp-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 11px;
+  border: 1.5px solid #e2e8f0;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #f8fafc;
+}
+.cp-emp-card:hover {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+.cp-emp-card--active {
+  border-color: #6366f1;
+  background: #eef2ff;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.cp-emp-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #6366f1, #818cf8);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.cp-emp-avatar--lg {
+  width: 48px;
+  height: 48px;
+  font-size: 1.2rem;
+}
+
+.cp-emp-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+.cp-emp-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+}
+.cp-emp-id {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+/* ── Selected Employee ── */
+.cp-selected-emp {
+  border-color: #6366f1;
+  background: linear-gradient(135deg, #f8fafc, #eef2ff);
+}
+
+.cp-selected-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ── Stats ── */
+.cp-stats-row {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+.cp-stat {
+  text-align: center;
+  padding: 8px 16px;
+  border-radius: 10px;
+  min-width: 60px;
+}
+.cp-stat--blue  { background: #dbeafe; }
+.cp-stat--green { background: #dcfce7; }
+.cp-stat--red   { background: #fee2e2; }
+.cp-stat--yellow{ background: #fef9c3; }
+
+.cp-stat-num {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+.cp-stat-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ── Promo Banner ── */
+.cp-promo-banner {
+  margin-top: 14px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1.5px solid #86efac;
+  border-radius: 10px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #14532d;
+}
+
+/* ── Card Header Row (title + reviewer row) ── */
+.cp-card-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.cp-reviewer-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── Table ── */
+.cp-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+}
+
+.cp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.83rem;
+}
+
+.cp-th {
+  background: #f8fafc;
+  color: #475569;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 11px 14px;
+  text-align: left;
+  border-bottom: 1.5px solid #e2e8f0;
+  white-space: nowrap;
+}
+
+.cp-td {
+  padding: 12px 14px;
+  color: #1e293b;
+  vertical-align: middle;
+  border-bottom: 1px solid #f1f5f9;
+}
+.cp-td--center {
+  text-align: center;
+}
+
+.cp-tr--even { background: #fff; }
+.cp-tr--odd  { background: #fafafa; }
+.cp-tr:hover { background: #f0f4ff; transition: background 0.12s; }
+
+/* ── Thumbnail Images ── */
+.cp-thumb {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  transition: transform 0.15s;
+}
+.cp-thumb:hover {
+  transform: scale(1.08);
+}
+.cp-thumb--answer {
+  border-color: #818cf8;
+  box-shadow: 0 0 0 2px #c7d2fe;
+}
+
+/* ── Loading / Empty ── */
+.cp-loading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #64748b;
+  font-size: 0.88rem;
+  padding: 24px;
+  justify-content: center;
+}
+
+.cp-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid #e2e8f0;
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: cp-spin 0.7s linear infinite;
+}
+@keyframes cp-spin {
+  to { transform: rotate(360deg); }
+}
+
+.cp-empty {
+  text-align: center;
+  padding: 40px;
+  color: #94a3b8;
+  font-size: 0.9rem;
+}
+
+/* ── Scrollbar ── */
+.cp-emp-list::-webkit-scrollbar,
+.cp-table-wrap::-webkit-scrollbar { width: 5px; height: 5px; }
+.cp-emp-list::-webkit-scrollbar-track,
+.cp-table-wrap::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+.cp-emp-list::-webkit-scrollbar-thumb,
+.cp-table-wrap::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .cp-root { padding: 14px; gap: 14px; }
+  .cp-search-row { flex-direction: column; }
+  .cp-stats-row { margin-left: 0; }
+  .cp-card-header-row { flex-direction: column; align-items: flex-start; }
+}
