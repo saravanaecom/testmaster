@@ -1,0 +1,183 @@
+/* ════════════════════════════════════════════
+   DashboardHeader.css
+   ════════════════════════════════════════════ */
+
+/* ── Root bar ──────────────────────────────── */
+.dh-root {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid #e8ecf0;
+  box-shadow: 0 1px 8px rgba(15, 23, 42, 0.06);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ── Inner: constrained width, flex row ────── */
+.dh-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+/* ════════════════════════════════════════════
+   BRAND (left side)
+════════════════════════════════════════════ */
+.dh-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+/* Logo box */
+.dh-logo-box {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.35);
+}
+
+.dh-logo-letter {
+  font-size: 18px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  font-style: italic;
+}
+
+/* Company name + subtitle */
+.dh-brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  gap: 2px;
+}
+
+.dh-brand-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.dh-brand-sub {
+  font-size: 10px;
+  font-weight: 400;
+  color: #94a3b8;
+  letter-spacing: 0.03em;
+  line-height: 1;
+}
+
+/* ════════════════════════════════════════════
+   USER SECTION (right side)
+════════════════════════════════════════════ */
+.dh-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+/* Avatar circle */
+.dh-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.03em;
+  flex-shrink: 0;
+}
+
+/* Name + role text block */
+.dh-user-info {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  gap: 3px;
+}
+
+.dh-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+.dh-user-role {
+  font-size: 11px;
+  font-weight: 400;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* Vertical divider */
+.dh-divider {
+  width: 1px;
+  height: 24px;
+  background: #e2e8f0;
+  flex-shrink: 0;
+}
+
+/* Logout button */
+.dh-logout {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  white-space: nowrap;
+}
+.dh-logout:hover {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+.dh-logout:active { opacity: 0.8; }
+
+/* ════════════════════════════════════════════
+   RESPONSIVE
+════════════════════════════════════════════ */
+
+/* Tablet: hide subtitle and role text */
+@media (max-width: 640px) {
+  .dh-inner { padding: 0 1rem; }
+  .dh-brand-sub { display: none; }
+  .dh-user-role { display: none; }
+  .dh-logout-label { display: none; }
+  .dh-logout { padding: 6px 8px; }
+  .dh-divider { display: none; }
+}
+
+/* Mobile: compress further */
+@media (max-width: 400px) {
+  .dh-brand-name { font-size: 13px; }
+  .dh-logo-box { width: 30px; height: 30px; border-radius: 7px; }
+  .dh-logo-letter { font-size: 15px; }
+  .dh-user-name { font-size: 12px; }
+}

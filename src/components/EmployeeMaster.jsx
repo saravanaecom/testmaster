@@ -68,8 +68,8 @@ const Login = () => {
             testStatus:       emp.TestStatus       ?? 0,
             userType:         data.UserType,
           }));
-
-          navigate("/TestMaster");
+          navigate("/dashboard");
+          //navigate("/TestMaster");
 
         } else if (data.UserType === "Admin") {
           const admin = data.Data3[0];

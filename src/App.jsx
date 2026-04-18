@@ -5,7 +5,9 @@ import EmployeeMaster from "./components/EmployeeMaster";
 import Signup         from "./components/Signup";
 import TestMaster     from "./components/TestMaster";       // ✅ NEW
 import ProtectedRoute from "./components/ProtectedRoute";
-import CorrectionsPage from"./components/CorrectionsPage"
+import CorrectionsPage from"./components/CorrectionsPage";
+import EmployeeDashboard from "./components/EmployeeDashboard";
+
 function App() {
   return (
     <BrowserRouter>
@@ -40,6 +42,13 @@ function App() {
             <TestMaster />
           </ProtectedRoute>
         } />
+
+        {/* ✅ NEW Dashboard */}
+    <Route path="/dashboard" element={
+      <ProtectedRoute allowedUserType="Employee">
+        <EmployeeDashboard />
+      </ProtectedRoute>
+    } />
       </Routes>
     </BrowserRouter>
   );
