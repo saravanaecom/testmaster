@@ -53,7 +53,11 @@ export default function LevelMaster() {
   // ── Load Roles from RoleMaster ──────────────────────────
   const loadRoles = async () => {
     try {
-      const res  = await fetch(`${BASE_URL}api/SupportApp/GetRoles`);
+      const res = await fetch(`${BASE_URL}api/SupportApp/GetRoles`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
       const data = await res.json();
       if (data.IsSuccess && Array.isArray(data.Data3)) {
         setRoles(data.Data3.map(r => ({ id: r.Id, roleName: r.RoleName })));
