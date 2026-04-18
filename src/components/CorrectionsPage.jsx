@@ -747,6 +747,41 @@ export default function CorrectionsPage() {
   const [employees, setEmployees]         = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
+  /* ── Dropdown options ── */
+  const [empOptions,  setEmpOptions]  = useState([]);
+  const [roleOptions, setRoleOptions] = useState([]);
+
+  /* ── Load dropdowns on mount ── */
+  useEffect(() => {
+    // Fetch all active employees for dropdown
+    api("/SupportApp/SelectEmployeeByName", { EmployeeName: "" }).then(res => {
+      if (res.IsSuccess && Array.isArray(res.Data3)) {
+        setEmpOptions(res.Data3.map(r => ({
+          id:           r.Id           ?? r.id,
+          employeeName: r.EmployeeName ?? r.employeeName,
+          roleType:     r.RoleType     ?? r.roleType ?? r.RoleName ?? r.roleName,
+          testLevel:    r.TestLevel    ?? r.testLevel,
+          levelMasterRefid: r.LevelMasterRefid ?? r.levelMasterRefid,
+          levelName:    r.LevelName    ?? r.levelName,
+          roleMasterRefid: r.RoleMasterRefid ?? r.roleMasterRefid,
+        })));
+      }
+    });
+    // Fetch roles for dropdown
+    // api("/SupportApp/GetRoles", {}).then(res => {
+
+      fetch(`${BASE_URL}/api/SupportApp/GetRoles`)
+  .then(r => r.json())
+  .then(res => {
+      if (res.IsSuccess && Array.isArray(res.Data3)) {
+        setRoleOptions(res.Data3.map(r => ({
+          id:       r.Id       ?? r.id,
+          roleName: r.RoleName ?? r.roleName,
+        })));
+      }
+    });
+  }, []);
+
   /* ── Selected Employee ── */
   const [selectedEmp, setSelectedEmp]     = useState(null);
 
@@ -779,8 +814,6 @@ export default function CorrectionsPage() {
   /* ── Filter ── */
   const [filterStatus, setFilterStatus]     = useState("All");
 
-  const nameRef = useRef();
-
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 4000);
@@ -801,51 +834,38 @@ export default function CorrectionsPage() {
     : reviewRows.filter(r => r.testStatus === filterStatus);
 
   /* ─── SEARCH EMPLOYEES ─── */
-  const handleSearch = async () => {
-    if (!searchName.trim() && !searchRole.trim()) {
-      showToast("⚠️ Please enter Employee Name or Role to search", "warn");
+  const handleSearch = () => {
+    if (!searchName && !searchRole) {
+      showToast("⚠️ Please select Employee Name or Role to search", "warn");
       return;
     }
 
-    setSearchLoading(true);
     setSelectedEmp(null);
     setReviewRows([]);
     setActionResult(null);
 
-    try {
-      const res = await api("/SupportApp/SelectEmployeeByName", {
-        EmployeeName: searchName.trim(),
-      });
+    let list = [...empOptions];
 
-      if (res.IsSuccess && Array.isArray(res.Data3)) {
-        let list = res.Data3.map(r => ({
-          id:               r.Id               ?? r.id,
-          employeeName:     r.EmployeeName      ?? r.employeeName,
-          roleType:         r.RoleType          ?? r.roleType   ?? r.RoleName ?? r.roleName,
-          testLevel:        r.TestLevel         ?? r.testLevel,
-          levelMasterRefid: r.LevelMasterRefid  ?? r.levelMasterRefid,
-          levelName:        r.LevelName         ?? r.levelName,
-        }));
-
-        if (searchRole.trim()) {
-          const q = searchRole.trim().toLowerCase();
-          list = list.filter(e => (e.roleType || "").toLowerCase().includes(q));
-        }
-
-        setEmployees(list);
-        if (list.length === 0) showToast("⚠️ No employees found", "warn");
-      } else {
-        setEmployees([]);
-        showToast(`⚠️ ${res.Message || "No employees found"}`, "warn");
-      }
-    } finally {
-      setSearchLoading(false);
+    // Filter by selected employee Id
+    if (searchName) {
+      list = list.filter(e => String(e.id) === String(searchName));
     }
+
+    // Filter by selected role Id
+    if (searchRole) {
+      list = list.filter(e => String(e.roleMasterRefid) === String(searchRole));
+    }
+
+    setEmployees(list);
+    if (list.length === 0) showToast("⚠️ No employees found", "warn");
   };
 
   /* ─── SELECT EMPLOYEE → LOAD REVIEW DATA ─── */
   const handleSelectEmployee = async (emp) => {
     setSelectedEmp(emp);
+    // Sync dropdowns to reflect the chosen employee
+    setSearchName(String(emp.id));
+    if (emp.roleMasterRefid) setSearchRole(String(emp.roleMasterRefid));
     setReviewRows([]);
     setActionResult(null);
     setReviewLoading(true);
@@ -1107,31 +1127,41 @@ export default function CorrectionsPage() {
           <div className="cp-search-row">
             <div className="cp-field">
               <label className="cp-label">Employee Name</label>
-              <input
-                ref={nameRef}
+              <select
                 className="cp-input"
-                placeholder="Type name to search… (leave blank to search by role)"
                 value={searchName}
                 onChange={e => setSearchName(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleSearch()}
-              />
+                style={{ cursor: "pointer" }}
+              >
+                <option value="">— Select Employee —</option>
+                {empOptions.map(emp => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.employeeName}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="cp-field">
               <label className="cp-label">Role Type</label>
-              <input
+              <select
                 className="cp-input"
-                placeholder="Support / Sales / Implementation…"
                 value={searchRole}
                 onChange={e => setSearchRole(e.target.value)}
-                onKeyDown={e => e.key === "Enter" && handleSearch()}
-              />
+                style={{ cursor: "pointer" }}
+              >
+                <option value="">— Select Role —</option>
+                {roleOptions.map(role => (
+                  <option key={role.id} value={role.id}>
+                    {role.roleName}
+                  </option>
+                ))}
+              </select>
             </div>
             <button
               className="cp-btn cp-btn--primary"
               onClick={handleSearch}
-              disabled={searchLoading}
             >
-              {searchLoading ? "🔍 Searching…" : "🔍 Search"}
+              🔍 Search
             </button>
             <button
               className="cp-btn cp-btn--ghost"
