@@ -395,19 +395,34 @@ export default function QuestionMaster() {
   };
 
   // ── LOAD ROLES ───────────────────────────────────────────
+  // const loadRoles = async () => {
+  //   try {
+  //     const res = await fetch(`${BASE_URL}/api/SupportApp/GetRoles`, {
+  //       method: "GET",
+  //       headers: { "Content-Type": "application/json" },
+  //     });
+  //     if (!res.ok) {
+  //       console.error("GetRoles HTTP Error:", res.status);
+  //       return;
+  //     }
+  //     const data = await res.json();
+  //     if (data.IsSuccess && Array.isArray(data.Data3)) {
+  //       setRoles(data.Data3.map((r) => ({ id: r.Id, roleName: r.RoleName })));
+  //     }
+  //   } catch (err) {
+  //     console.error("GetRoles error:", err);
+  //     showToast("Could not load roles", "warn");
+  //   }
+  // };
   const loadRoles = async () => {
     try {
-      const res = await fetch(`${BASE_URL}/api/SupportApp/GetRoles`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) {
-        console.error("GetRoles HTTP Error:", res.status);
-        return;
-      }
-      const data = await res.json();
+      // FIX: was method:"GET" → HTTP 405. All endpoints require POST.
+      const data = await api("/SupportApp/GetRoles");
       if (data.IsSuccess && Array.isArray(data.Data3)) {
         setRoles(data.Data3.map((r) => ({ id: r.Id, roleName: r.RoleName })));
+      } else {
+        console.error("GetRoles failed:", data.Message);
+        showToast("Could not load roles", "warn");
       }
     } catch (err) {
       console.error("GetRoles error:", err);
