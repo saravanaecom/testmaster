@@ -1,15 +1,20 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../index.css";
 import { useNavigate } from "react-router-dom";
 import Image from "../assets/image.png";
 import Logo from "../assets/logo.png";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
+
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [mobileNumber, setMobileNumber] = useState("");
   const [password, setPassword]         = useState("");
   const navigate = useNavigate();
+
+  useEffect(() => {
+    localStorage.removeItem("employee");
+  }, []);
 
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {

@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import "../CorrectionsPage.css";
 import AdminLayout from "../components/AdminLayout";
 
-//const BASE_URL   = "f7262e6d4d995a48.vercel-dns-017.com";
 
 //const BASE_URL   = "http://localhost:44300";
 const BASE_URL   = "https://testapi.kassapos.co.in";
