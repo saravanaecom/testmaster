@@ -69,21 +69,192 @@ function StatusBadge({ status }) {
 }
 
 /* ─── Role Pill ─── */
+const ROLE_PALETTE = [
+  ["#dbeafe", "#1d4ed8"], ["#fef9c3", "#a16207"], ["#dcfce7", "#15803d"],
+  ["#fce7f3", "#9d174d"], ["#ede9fe", "#6d28d9"], ["#ffedd5", "#c2410c"], ["#ecfeff", "#0e7490"],
+];
+const ROLE_EXACT = {
+  Support: ["#dbeafe", "#1d4ed8"], Implementation: ["#fef9c3", "#a16207"], Sales: ["#dcfce7", "#15803d"],
+};
+function rolePillColors(role) {
+  if (!role) return ["#f1f5f9", "#64748b"];
+  if (ROLE_EXACT[role]) return ROLE_EXACT[role];
+  let hash = 0;
+  for (let i = 0; i < role.length; i++) hash = (hash * 31 + role.charCodeAt(i)) & 0xffff;
+  return ROLE_PALETTE[hash % ROLE_PALETTE.length];
+}
 function RolePill({ role }) {
-  const map = {
-    Support:        ["#dbeafe", "#1d4ed8"],
-    Implementation: ["#fef9c3", "#a16207"],
-    Sales:          ["#dcfce7", "#15803d"],
-  };
-  const [bg, color] = map[role] || ["#f1f5f9", "#64748b"];
+  const [bg, color] = rolePillColors(role);
   return (
     <span style={{
       background: bg, color,
       padding: "2px 10px", borderRadius: 20,
-      fontSize: "0.72rem", fontWeight: 700,
+      fontSize: "0.72rem", fontWeight: 700, whiteSpace: "nowrap",
     }}>
-      {role || "—"}
+      {role || "No Role"}
     </span>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   SEARCHABLE DROPDOWN
+   options: [{ value, label }]
+   value: currently selected value (string)
+   onChange(value): called with new value string
+   placeholder: input placeholder text
+══════════════════════════════════════════════ */
+function SearchableDropdown({ options = [], value, onChange, placeholder = "Search…" }) {
+  const [query,  setQuery]  = useState("");
+  const [open,   setOpen]   = useState(false);
+  const wrapRef             = useRef(null);
+
+  // Derive the display label for the current value
+  const selectedLabel = options.find(o => String(o.value) === String(value))?.label ?? "";
+
+  // Filter options by query (case-insensitive substring)
+  const filtered = query.trim()
+    ? options.filter(o => o.label.toLowerCase().includes(query.toLowerCase()))
+    : options;
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target)) {
+        setOpen(false);
+        setQuery("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const handleSelect = (opt) => {
+    onChange(String(opt.value));
+    setOpen(false);
+    setQuery("");
+  };
+
+  const handleClear = (e) => {
+    e.stopPropagation();
+    onChange("");
+    setQuery("");
+    setOpen(false);
+  };
+
+  return (
+    <div ref={wrapRef} style={{ position: "relative", width: "100%" }}>
+      {/* Trigger */}
+      <div
+        onClick={() => { setOpen(o => !o); }}
+        style={{
+          display: "flex", alignItems: "center",
+          border: open ? "1.5px solid #6366f1" : "1.5px solid #e2e8f0",
+          borderRadius: 8, background: "#fff",
+          cursor: "pointer", minHeight: 38,
+          boxShadow: open ? "0 0 0 3px rgba(99,102,241,0.12)" : "none",
+          transition: "border-color 0.15s, box-shadow 0.15s",
+          overflow: "hidden",
+        }}
+      >
+        {open ? (
+          /* Search input while open */
+          <input
+            autoFocus
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            onClick={e => e.stopPropagation()}
+            placeholder={placeholder}
+            style={{
+              flex: 1, border: "none", outline: "none",
+              padding: "8px 10px", fontSize: "0.85rem",
+              background: "transparent", color: "#0f172a",
+            }}
+          />
+        ) : (
+          /* Display selected label */
+          <span style={{
+            flex: 1, padding: "8px 10px",
+            fontSize: "0.85rem",
+            color: selectedLabel ? "#0f172a" : "#94a3b8",
+            whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
+          }}>
+            {selectedLabel || placeholder}
+          </span>
+        )}
+
+        {/* Clear × button when something is selected */}
+        {value && !open && (
+          <span
+            onClick={handleClear}
+            title="Clear"
+            style={{
+              padding: "0 8px", color: "#94a3b8",
+              fontSize: "0.8rem", lineHeight: "38px",
+              cursor: "pointer",
+              flexShrink: 0,
+            }}
+          >
+            ✕
+          </span>
+        )}
+
+        {/* Chevron */}
+        <span style={{
+          padding: "0 10px", color: "#94a3b8",
+          fontSize: "0.7rem", flexShrink: 0,
+          transform: open ? "rotate(180deg)" : "rotate(0deg)",
+          transition: "transform 0.15s",
+        }}>
+          ▼
+        </span>
+      </div>
+
+      {/* Dropdown list */}
+      {open && (
+        <div style={{
+          position: "absolute", top: "calc(100% + 4px)", left: 0, right: 0,
+          zIndex: 9999,
+          background: "#fff",
+          border: "1.5px solid #e2e8f0",
+          borderRadius: 10,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.13)",
+          maxHeight: 260, overflowY: "auto",
+        }}>
+          {filtered.length === 0 ? (
+            <div style={{
+              padding: "12px 14px",
+              fontSize: "0.82rem", color: "#94a3b8", textAlign: "center",
+            }}>
+              No results found
+            </div>
+          ) : (
+            filtered.map(opt => {
+              const isActive = String(opt.value) === String(value);
+              return (
+                <div
+                  key={opt.value}
+                  onMouseDown={() => handleSelect(opt)}
+                  style={{
+                    padding: "9px 14px",
+                    fontSize: "0.85rem",
+                    cursor: "pointer",
+                    background: isActive ? "#eef2ff" : "transparent",
+                    color: isActive ? "#4f46e5" : "#0f172a",
+                    fontWeight: isActive ? 700 : 400,
+                    borderBottom: "1px solid #f1f5f9",
+                    transition: "background 0.1s",
+                  }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "#f8fafc"; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                >
+                  {opt.label}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -753,30 +924,30 @@ export default function CorrectionsPage() {
 
   /* ── Load dropdowns on mount ── */
   useEffect(() => {
-    // Fetch all active employees for dropdown
     api("/SupportApp/SelectEmployeeByName", { EmployeeName: "" }).then(res => {
       if (res.IsSuccess && Array.isArray(res.Data3)) {
-        setEmpOptions(res.Data3.map(r => ({
-          id:           r.Id           ?? r.id,
-          employeeName: r.EmployeeName ?? r.employeeName,
-          roleType:     r.RoleType     ?? r.roleType ?? r.RoleName ?? r.roleName,
-          testLevel:    r.TestLevel    ?? r.testLevel,
-          levelMasterRefid: r.LevelMasterRefid ?? r.levelMasterRefid,
-          levelName:    r.LevelName    ?? r.levelName,
-          roleMasterRefid: r.RoleMasterRefid ?? r.roleMasterRefid,
-        })));
+        setEmpOptions(res.Data3.map(r => {
+          const roleName =
+            r.RoleName ?? r.roleName ??
+            r.RoleType ?? r.roleType ??
+            r.Role     ?? r.role     ?? "";
+          return {
+            id:               r.Id               ?? r.id,
+            employeeName:     r.EmployeeName      ?? r.employeeName     ?? "",
+            roleType:         roleName,
+            testLevel:        r.TestLevel         ?? r.testLevel        ?? "",
+            levelMasterRefid: r.LevelMasterRefid  ?? r.levelMasterRefid ?? null,
+            levelName:        r.LevelName         ?? r.levelName        ?? "",
+            roleMasterRefid:  r.RoleMasterRefid   ?? r.roleMasterRefid  ?? null,
+          };
+        }));
       }
     });
-    // Fetch roles for dropdown
-    // api("/SupportApp/GetRoles", {}).then(res => {
-
-      fetch(`${BASE_URL}/api/SupportApp/GetRoles`)
-  .then(r => r.json())
-  .then(res => {
+    api("/SupportApp/GetRoles", {}).then(res => {
       if (res.IsSuccess && Array.isArray(res.Data3)) {
         setRoleOptions(res.Data3.map(r => ({
           id:       r.Id       ?? r.id,
-          roleName: r.RoleName ?? r.roleName,
+          roleName: r.RoleName ?? r.roleName ?? "",
         })));
       }
     });
@@ -1127,35 +1298,21 @@ export default function CorrectionsPage() {
           <div className="cp-search-row">
             <div className="cp-field">
               <label className="cp-label">Employee Name</label>
-              <select
-                className="cp-input"
+              <SearchableDropdown
+                options={empOptions.map(emp => ({ value: emp.id, label: emp.employeeName }))}
                 value={searchName}
-                onChange={e => setSearchName(e.target.value)}
-                style={{ cursor: "pointer" }}
-              >
-                <option value="">— Select Employee —</option>
-                {empOptions.map(emp => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.employeeName}
-                  </option>
-                ))}
-              </select>
+                onChange={val => setSearchName(val)}
+                placeholder="Search employee name…"
+              />
             </div>
             <div className="cp-field">
               <label className="cp-label">Role Type</label>
-              <select
-                className="cp-input"
+              <SearchableDropdown
+                options={roleOptions.map(role => ({ value: role.id, label: role.roleName }))}
                 value={searchRole}
-                onChange={e => setSearchRole(e.target.value)}
-                style={{ cursor: "pointer" }}
-              >
-                <option value="">— Select Role —</option>
-                {roleOptions.map(role => (
-                  <option key={role.id} value={role.id}>
-                    {role.roleName}
-                  </option>
-                ))}
-              </select>
+                onChange={val => setSearchRole(val)}
+                placeholder="Search role…"
+              />
             </div>
             <button
               className="cp-btn cp-btn--primary"
