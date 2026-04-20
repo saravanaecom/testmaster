@@ -70,6 +70,84 @@ const ROLE_STYLE = {
 };
 
 // ─────────────────────────────────────────────────────────────────
+//  CONFIRMATION DIALOG COMPONENT
+// -----------------------------------------------------------------
+function ConfirmDialog({ open, message, onConfirm, onCancel }) {
+  if (!open) return null;
+  return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 10000,
+        background: "rgba(0,0,0,0.45)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        backdropFilter: "blur(3px)",
+      }}
+    >
+      <div
+        style={{
+          background: "#fff",
+          borderRadius: 14,
+          boxShadow: "0 8px 40px rgba(0,0,0,0.22)",
+          padding: "32px 28px 24px",
+          minWidth: 320,
+          maxWidth: 420,
+          textAlign: "center",
+          display: "flex",
+          flexDirection: "column",
+          gap: 20,
+        }}
+      >
+        <div style={{ fontSize: "2rem", lineHeight: 1 }}>🤔</div>
+        <p style={{
+          margin: 0,
+          fontSize: "0.95rem",
+          color: "#1e293b",
+          fontWeight: 500,
+          lineHeight: 1.5,
+        }}>
+          {message}
+        </p>
+        <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+          <button
+            type="button"
+            onClick={onCancel}
+            style={{
+              padding: "8px 24px",
+              borderRadius: 8,
+              border: "1.5px solid #cbd5e1",
+              background: "#f8fafc",
+              color: "#475569",
+              fontWeight: 600,
+              fontSize: "0.88rem",
+              cursor: "pointer",
+            }}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            style={{
+              padding: "8px 24px",
+              borderRadius: 8,
+              border: "none",
+              background: "#2563eb",
+              color: "#fff",
+              fontWeight: 700,
+              fontSize: "0.88rem",
+              cursor: "pointer",
+              boxShadow: "0 2px 8px rgba(37,99,235,0.25)",
+            }}
+          >
+            Yes, Proceed
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────
 //  MULTI-IMAGE UPLOAD COMPONENT
 //  - selectedFiles   : files chosen but not yet uploaded (local preview)
 //  - uploadedNames   : filenames already saved on server (from DB or upload)
@@ -88,6 +166,7 @@ function MultiImageUpload({
   loading,
   onZoom,
   showToast,
+  onRequestUpload,   // ← new: called instead of handleUpload directly
 }) {
   const fileInputRef = useRef();
 
@@ -190,7 +269,7 @@ function MultiImageUpload({
         <button
           type="button"
           className="qm-btn qm-btn-upload-sm"
-          onClick={handleUpload}
+          onClick={() => onRequestUpload(handleUpload)}
           disabled={!totalSelected || loading}
           style={{ opacity: !totalSelected || loading ? 0.5 : 1 }}
         >
@@ -385,6 +464,14 @@ export default function QuestionMaster() {
   const [selectedFiles, setSelectedFiles]   = useState([]);   // File[]
   const [uploadedNames, setUploadedNames]   = useState([]);   // string[]
 
+  // ── CONFIRMATION DIALOG state ──
+  const [confirmState, setConfirmState] = useState({ open: false, message: "", onConfirm: null });
+
+  const requestConfirm = (message, onConfirm) => {
+    setConfirmState({ open: true, message, onConfirm });
+  };
+  const closeConfirm = () => setConfirmState({ open: false, message: "", onConfirm: null });
+
   // ── Drill-down filter state ──
   const [filterRole, setFilterRole]   = useState("");
   const [filterLevel, setFilterLevel] = useState("");
@@ -537,7 +624,7 @@ export default function QuestionMaster() {
     ? levels.filter((l) => String(l.roleMasterRefid) === String(roleMasterRefid))
     : levels;
 
-  // ── SUBMIT ───────────────────────────────────────────────
+  // ── SUBMIT (core logic — called after confirmation) ──────
   async function handleSubmit() {
     if (loading) return;
     if (!roleMasterRefid || !levelMasterRefid || !question) {
@@ -654,9 +741,49 @@ export default function QuestionMaster() {
     setUploadedNames([]);
   };
 
+  // ── CONFIRMATION-GATED WRAPPERS ──────────────────────────
+  const handleSubmitWithConfirm = () => {
+    // Run existing validations first (before showing dialog)
+    if (!roleMasterRefid || !levelMasterRefid || !question) {
+      showToast("Please fill Role, Level and Question", "warn"); return;
+    }
+    if (inputMode === "option" && !optionA) {
+      showToast("Please fill at least Option A", "warn"); return;
+    }
+    if (inputMode === "option" && !answer) {
+      showToast("Please fill the Answer field", "warn"); return;
+    }
+    const msg = editId !== null
+      ? "Do you want to update this question?"
+      : "Do you want to save this question?";
+    requestConfirm(msg, () => { closeConfirm(); handleSubmit(); });
+  };
+
+  const handleResetWithConfirm = () => {
+    requestConfirm("Do you want to reset all entered data?", () => {
+      closeConfirm();
+      handleReset();
+    });
+  };
+
+  const handleUploadWithConfirm = (actualUploadFn) => {
+    requestConfirm("Do you want to upload the selected image(s)?", () => {
+      closeConfirm();
+      actualUploadFn();
+    });
+  };
+
   // ── RENDER ───────────────────────────────────────────────
   return (
     <AdminLayout title="QUESTION DETAILS" recordCount={rows.length} editId={editId}>
+
+      {/* ── Confirmation Dialog ── */}
+      <ConfirmDialog
+        open={confirmState.open}
+        message={confirmState.message}
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
 
       {/* ── Form Wrapper ── */}
       <div className="qm-form-wrapper">
@@ -786,12 +913,12 @@ export default function QuestionMaster() {
               <button
                 type="button"
                 className="qm-btn qm-btn-save"
-                onClick={handleSubmit}
+                onClick={handleSubmitWithConfirm}
                 disabled={loading}
               >
                 {editId !== null ? "✔ Update Question" : "+ Save Question"}
               </button>
-              <button className="qm-btn qm-btn-reset" onClick={handleReset}>
+              <button className="qm-btn qm-btn-reset" onClick={handleResetWithConfirm}>
                 Reset
               </button>
             </div>
@@ -811,6 +938,7 @@ export default function QuestionMaster() {
                 loading={loading}
                 onZoom={setZoomImg}
                 showToast={showToast}
+                onRequestUpload={handleUploadWithConfirm}
               />
             </Field>
 
@@ -860,7 +988,7 @@ export default function QuestionMaster() {
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
-                        handleSubmit();
+                        handleSubmitWithConfirm();
                       }
                     }}
                   />
