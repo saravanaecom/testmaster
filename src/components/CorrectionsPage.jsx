@@ -49,7 +49,7 @@ const isAudioUrl = (url) =>
 /* ─── Status Badge ─── */
 function StatusBadge({ status }) {
   const map = {
-    Submitted: { bg: "#fef9c3", color: "#a16207",  label: "⏳ Waiting for Review" },
+    Submitted: { bg: "#fef9c3", color: "#a16207",  label: "⏳ Waiting for Review"  },
     Approved:  { bg: "#dcfce7", color: "#15803d",  label: "✅ Approved"            },
     ReExam:    { bg: "#fee2e2", color: "#b91c1c",  label: "🔁 Re-Exam Required"    },
     Reviewed:  { bg: "#dbeafe", color: "#1d4ed8",  label: "🔍 Reviewed"            },
