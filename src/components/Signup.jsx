@@ -17,18 +17,36 @@ const Signup = () => {
     testLevel: "LEVEL1",
   });
 
+  // useEffect(() => {
+  //   fetch("https://testreview.kassapos.in/api/SupportApp/GetRoles")
+  //     .then((res) => res.json())
+  //     .then((data) => {
+  //       console.log("GetRoles response:", data); // keep for debugging
+
+  //       // ✅ FIXED: Backend now uses Data3; fallback to Data just in case
+  //       const roleList = data.Data3 || data.Data || [];
+  //       if (Array.isArray(roleList) && roleList.length > 0) {
+  //         setRoles(roleList);
+  //       } else {
+  //         console.warn("No roles returned from API:", data);
+  //       }
+  //     })
+  //     .catch((err) => console.error("Error fetching roles:", err));
+  // }, []);
+
   useEffect(() => {
-    fetch("https://testreview.kassapos.in/api/SupportApp/GetRoles")
+    //fetch("https://testreview.kassapos.in/api/SupportApp/GetRoles", {
+
+      fetch("https://testapi.kassapos.co.in/api/SupportApp/GetRoles", {
+      method: "POST" // ✅ IMPORTANT FIX
+    })
       .then((res) => res.json())
       .then((data) => {
-        console.log("GetRoles response:", data); // keep for debugging
-
-        // ✅ FIXED: Backend now uses Data3; fallback to Data just in case
+        console.log("GetRoles response:", data);
+  
         const roleList = data.Data3 || data.Data || [];
-        if (Array.isArray(roleList) && roleList.length > 0) {
+        if (Array.isArray(roleList)) {
           setRoles(roleList);
-        } else {
-          console.warn("No roles returned from API:", data);
         }
       })
       .catch((err) => console.error("Error fetching roles:", err));
