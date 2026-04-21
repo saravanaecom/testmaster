@@ -1106,10 +1106,61 @@ export default function TestMaster() {
             "Please check back after your answers have been reviewed."
           );
         } else if (allApproved) {
-          const promotedToLevel = emp.levelName || "Next Level";
+          // ── FIX BUGS 1 + 2 + 3 ──────────────────────────────────────────
+          // emp (from localStorage) still holds the PRE-promotion level.
+          // That is the correct "from" level to display in the popup.
+          // We must re-fetch the employee record from the server to get the
+          // REAL "next" level that FinalizeTestReview already wrote into
+          // EmployeeMaster.TestLevel, and use the fresh LevelMasterRefid when
+          // loading questions so the backend's hasRole+hasLevel filter returns
+          // the correct next-level questions instead of the old ones.
+          const beforeLevel = emp.levelName || emp.TestLevel || "Current Level";
+          setCurrentLevel(beforeLevel);   // "from" level — correct from stale emp
+
+          let freshEmp = emp;             // safe fallback if re-fetch fails
+          try {
+            // Fetch using the employee's own name so the result set is small.
+            // The backend returns everyone matching LIKE '%name%', so we still
+            // filter by id to be safe (handles duplicate names).
+            const freshRes = await fetch(`${API_BASE}/SelectEmployeeByName`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ EmployeeName: emp.name || "" }),
+            });
+            const freshData = await freshRes.json();
+            if (freshData.IsSuccess && Array.isArray(freshData.Data3)) {
+              const found = freshData.Data3.find(
+                r => String(r.Id ?? r.id) === String(emp.id)
+              );
+              if (found) {
+                // Merge level-related fields from the live DB record.
+                // All other session fields (id, name, RoleMasterRefid, etc.)
+                // stay as-is so we don't accidentally wipe anything.
+                freshEmp = {
+                  ...emp,
+                  levelName:        found.LevelName        ?? found.levelName        ?? emp.levelName,
+                  testLevel:        found.TestLevel        ?? found.testLevel        ?? emp.testLevel,
+                  LevelMasterRefid: found.LevelMasterRefid ?? found.levelMasterRefid ?? emp.LevelMasterRefid,
+                  levelMasterRefid: found.LevelMasterRefid ?? found.levelMasterRefid ?? emp.levelMasterRefid,
+                  testStatus:       found.TestStatus       ?? found.testStatus       ?? emp.testStatus,
+                };
+                // Persist so the next page load (handlePopupProceed dismisses
+                // the popup — the questions are already loaded correctly in state,
+                // but a hard-refresh would re-read localStorage).
+                localStorage.setItem("employee", JSON.stringify(freshEmp));
+              }
+            }
+          } catch {
+            // Network failure — fall through with stale emp.
+            // loadFreshQuestions will re-load the same-level questions but
+            // at least the app won't crash.
+          }
+
+          // Now nextLevel reads from the LIVE server record → "LEVEL3"
+          const promotedToLevel = freshEmp.levelName || freshEmp.testLevel || "Next Level";
           setNextLevel(promotedToLevel);
           setPopupMode("approved");
-          await loadFreshQuestions(emp);
+          await loadFreshQuestions(freshEmp);   // sends LEVEL3's LevelMasterRefid
         } else if (rows.length === 0) {
           setPopupMode(null);
           await loadFreshQuestions(emp);

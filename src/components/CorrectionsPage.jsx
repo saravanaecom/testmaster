@@ -992,7 +992,11 @@ export default function CorrectionsPage() {
 
   /* ── Derived Stats (based on full reviewRows for accurate counters) ── */
   const totalQ   = reviewRows.length;
-  const approved = reviewRows.filter(r => r.testStatus === "Approved").length;
+  // ✅ FIX: Count "Promoted" as approved.
+  // FinalizeTestReview sets all rows to "Promoted" after promotion.
+  // Without this, re-opening a promoted employee gives approved=0, totalQ=18
+  // → allApproved=false → modal incorrectly shows "🔁 Confirm Re-Exam".
+  const approved = reviewRows.filter(r => r.testStatus === "Approved" || r.testStatus === "Promoted").length;
   const reExam   = reviewRows.filter(r => r.testStatus === "ReExam").length;
   const pending  = reviewRows.filter(r => r.testStatus === "Submitted").length;
 
@@ -1217,6 +1221,41 @@ export default function CorrectionsPage() {
     }
   };
 
+  /* ─── REFRESH EMPLOYEE — re-fetch a single employee from the server and
+         update both selectedEmp state and the empOptions dropdown list.
+         Returns the fresh employee object (or the original on failure).      ─── */
+  const refreshEmployee = async (empId) => {
+    try {
+      const res = await api("/SupportApp/SelectEmployeeByName", { EmployeeName: "" });
+      if (res.IsSuccess && Array.isArray(res.Data3)) {
+        // Rebuild the full options list so the search dropdown is also up-to-date
+        const freshOptions = res.Data3.map(r => {
+          const roleName =
+            r.RoleName ?? r.roleName ??
+            r.RoleType ?? r.roleType ??
+            r.Role     ?? r.role     ?? "";
+          return {
+            id:               r.Id               ?? r.id,
+            employeeName:     r.EmployeeName      ?? r.employeeName     ?? "",
+            roleType:         roleName,
+            testLevel:        r.TestLevel         ?? r.testLevel        ?? "",
+            levelMasterRefid: r.LevelMasterRefid  ?? r.levelMasterRefid ?? null,
+            levelName:        r.LevelName         ?? r.levelName        ?? "",
+            roleMasterRefid:  r.RoleMasterRefid   ?? r.roleMasterRefid  ?? null,
+          };
+        });
+        setEmpOptions(freshOptions);
+
+        // Return the specific employee's fresh record
+        const found = freshOptions.find(e => String(e.id) === String(empId));
+        if (found) return found;
+      }
+    } catch {
+      // Silently fall through — caller will use original emp as fallback
+    }
+    return null;
+  };
+
   /* ─── FINALIZE ─── */
   const handleFinalize = async () => {
     if (!reviewPerson.trim()) {
@@ -1231,7 +1270,8 @@ export default function CorrectionsPage() {
 
     setSaving(true);
     try {
-      const allApprovedNow = reviewRows.every(r => r.testStatus === "Approved");
+      // ✅ FIX: "Promoted" rows are already-approved rows — treat them the same.
+      const allApprovedNow = reviewRows.every(r => r.testStatus === "Approved" || r.testStatus === "Promoted");
 
       if (allApprovedNow) {
         const res = await api("/SupportApp/FinalizeTestReview", {
@@ -1244,7 +1284,31 @@ export default function CorrectionsPage() {
           const toLevel   = res.NextLevel || "Next Level";
           setActionResult({ type: "promoted", empName: selectedEmp.employeeName, fromLevel, toLevel });
           showToast(`🚀 ${selectedEmp.employeeName} promoted to ${toLevel}!`);
-          await handleSelectEmployee({ ...selectedEmp, testLevel: toLevel });
+
+          // ✅ Re-fetch the fresh server record so selectedEmp reflects the
+          //    updated TestLevel / LevelName / LevelMasterRefid that
+          //    FinalizeTestReview wrote — not a stale client-side spread.
+          const freshEmp = await refreshEmployee(selectedEmp.id);
+          const resolvedEmp = freshEmp ?? { ...selectedEmp, testLevel: toLevel, levelName: toLevel };
+
+          // ✅ FIX BUG 4: Write the promoted level back into localStorage so
+          //    the employee's browser tab picks it up on its next init() call
+          //    without needing a full logout/login cycle.
+          //    Only update if the currently-stored session belongs to this employee.
+          try {
+            const stored = JSON.parse(localStorage.getItem("employee") || "null");
+            if (stored && String(stored.id) === String(selectedEmp.id)) {
+              localStorage.setItem("employee", JSON.stringify({
+                ...stored,
+                levelName:        resolvedEmp.levelName        || toLevel,
+                testLevel:        resolvedEmp.testLevel        || toLevel,
+                LevelMasterRefid: resolvedEmp.levelMasterRefid ?? stored.LevelMasterRefid,
+                levelMasterRefid: resolvedEmp.levelMasterRefid ?? stored.levelMasterRefid,
+              }));
+            }
+          } catch { /* localStorage unavailable — ignore */ }
+
+          await handleSelectEmployee(resolvedEmp);
         } else {
           showToast(`❌ ${res.Message || "Finalize failed"}`, "error");
         }
@@ -1257,7 +1321,9 @@ export default function CorrectionsPage() {
         if (res.IsSuccess) {
           setActionResult({ type: "reexam", empName: selectedEmp.employeeName });
           showToast(`🔁 ${selectedEmp.employeeName} set to Re-Exam.`, "warn");
-          await handleSelectEmployee(selectedEmp);
+          // Re-fetch so TestStatus = 0 is reflected in the search list too
+          const freshEmp = await refreshEmployee(selectedEmp.id);
+          await handleSelectEmployee(freshEmp ?? selectedEmp);
         } else {
           showToast(`❌ ${res.Message || "Finalize failed"}`, "error");
         }

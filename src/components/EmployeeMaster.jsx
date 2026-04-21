@@ -57,14 +57,18 @@ const Login = () => {
           localStorage.setItem("employee", JSON.stringify({
             id:               emp.Id,
             name:             emp.EmployeeName,
-            // FIX: store RoleMasterRefid for API calls
-            RoleMasterRefid:  emp.RoleMasterRefid ?? null,
-            // FIX: store RoleName for display (Topbar dept label)
-            roleName:         emp.RoleName        ?? "",
-            // keep for backward compatibility display in Topbar
-            dept:             emp.RoleName        ?? "",
-            levelName:        emp.LevelName  ,
+            RoleMasterRefid:  emp.RoleMasterRefid  ?? null,
+            roleName:         emp.RoleName         ?? "",
+            dept:             emp.RoleName         ?? "",
+            // ── Level fields (both casings) ──────────────────────────────
+            // levelName / LevelMasterRefid are used by TestMaster for API calls
+            // and for the "current level" display in Topbar.
+            // testLevel / levelMasterRefid are the lowercase-keyed fallbacks
+            // used in the allApproved re-fetch merge and loadFreshQuestions.
+            levelName:        emp.LevelName        ?? "",
+            testLevel:        emp.TestLevel        ?? emp.LevelName ?? "",
             LevelMasterRefid: emp.LevelMasterRefid ?? null,
+            levelMasterRefid: emp.LevelMasterRefid ?? null,
             testStatus:       emp.TestStatus       ?? 0,
             userType:         data.UserType,
           }));
