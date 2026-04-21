@@ -64,21 +64,18 @@ function Check() {
 
 // ─────────────────────────────────────────
 // MIC RECORDER COMPONENT
-// WhatsApp-style round button with pulse animation,
-// countdown timer, and audio blob → passed to parent as File
 // ─────────────────────────────────────────
 function MicRecorder({ onRecordingComplete, disabled }) {
-  const [isRecording, setIsRecording]   = useState(false);
-  const [seconds,     setSeconds]       = useState(0);
-  const [audioBlob,   setAudioBlob]     = useState(null);
-  const [audioUrl,    setAudioUrl]      = useState(null);
-  const [error,       setError]         = useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [seconds,     setSeconds]     = useState(0);
+  const [audioBlob,   setAudioBlob]   = useState(null);
+  const [audioUrl,    setAudioUrl]    = useState(null);
+  const [error,       setError]       = useState(null);
 
   const mediaRecorderRef = useRef(null);
   const chunksRef        = useRef([]);
   const timerRef         = useRef(null);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       clearInterval(timerRef.current);
@@ -152,8 +149,6 @@ function MicRecorder({ onRecordingComplete, disabled }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-
-        {/* ── Round Mic Button ── */}
         <button
           onClick={handleClick}
           disabled={disabled}
@@ -178,12 +173,10 @@ function MicRecorder({ onRecordingComplete, disabled }) {
           }}
         >
           {isRecording ? (
-            /* Stop icon */
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
               <rect x="5" y="5" width="14" height="14" rx="2"/>
             </svg>
           ) : (
-            /* Mic icon */
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
               <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -193,7 +186,6 @@ function MicRecorder({ onRecordingComplete, disabled }) {
           )}
         </button>
 
-        {/* ── Status Text ── */}
         <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
           {isRecording ? (
             <>
@@ -228,7 +220,6 @@ function MicRecorder({ onRecordingComplete, disabled }) {
         </div>
       </div>
 
-      {/* ── Audio Playback Preview ── */}
       {audioUrl && !isRecording && (
         <div style={{
           display: "flex", alignItems: "center", gap: 10,
@@ -250,7 +241,6 @@ function MicRecorder({ onRecordingComplete, disabled }) {
         </div>
       )}
 
-      {/* ── Error ── */}
       {error && (
         <div style={{ fontSize: "0.78rem", color: "#dc2626", fontWeight: 600 }}>
           ⚠️ {error}
@@ -275,11 +265,13 @@ function MicRecorder({ onRecordingComplete, disabled }) {
 // ─────────────────────────────────────────
 // STATUS POPUP
 // ─────────────────────────────────────────
+// FIX 1: Added full "completed" branch — was declared but never rendered
 function StatusPopup({ mode, rejectedCount, nextLevel, currentLevel, onProceed, onLogout }) {
   if (!mode || mode === "new") return null;
 
-  const isReExam   = mode === "reexam";
-  const isApproved = mode === "approved";
+  const isReExam    = mode === "reexam";
+  const isApproved  = mode === "approved";
+  const isCompleted = mode === "completed";
 
   return (
     <div style={{
@@ -294,76 +286,119 @@ function StatusPopup({ mode, rejectedCount, nextLevel, currentLevel, onProceed, 
         boxShadow: "0 20px 80px rgba(0,0,0,0.35)",
         textAlign: "center",
       }}>
-        <div style={{ fontSize: "3rem", marginBottom: 12 }}>
-          {isApproved ? "🚀" : "🔁"}
-        </div>
-        <div style={{
-          fontSize: "1.2rem", fontWeight: 800,
-          color: isApproved ? "#166534" : "#991b1b",
-          marginBottom: 8,
-        }}>
-          {isApproved ? "Test Approved!" : "Re-Exam Required"}
-        </div>
-        <div style={{ fontSize: "0.92rem", color: "#475569", marginBottom: 20, lineHeight: 1.6 }}>
-          {isApproved ? (
-            <>
-              Congratulations! All your answers have been approved.
-              <br />
-              You have been promoted from <strong>{currentLevel}</strong> to{" "}
-              <strong style={{ color: "#16a34a" }}>{nextLevel || "the next level"}</strong>.
+
+        {/* ── COMPLETED MODE ── */}
+        {isCompleted && (
+          <>
+            <div style={{ fontSize: "3rem", marginBottom: 12 }}>🎉</div>
+            <div style={{
+              fontSize: "1.2rem", fontWeight: 800,
+              color: "#14532d", marginBottom: 8,
+            }}>
+              All Levels Completed!
+            </div>
+            <div style={{ fontSize: "0.92rem", color: "#475569", marginBottom: 20, lineHeight: 1.6 }}>
+              Congratulations! You have successfully completed{" "}
+              <strong>all training levels</strong>.
               <br /><br />
-              New questions for <strong>{nextLevel}</strong> are ready for you.
-            </>
-          ) : (
-            <>
-              You have{" "}
-              <strong style={{ color: "#dc2626", fontSize: "1.1rem" }}>{rejectedCount}</strong>{" "}
-              question{rejectedCount !== 1 ? "s" : ""} that need re-examination.
-              <br /><br />
-              Only your rejected questions will be shown. Please complete your pending test.
-            </>
-          )}
-        </div>
-        {isReExam && (
-          <div style={{
-            background: "#fee2e2", borderRadius: 10,
-            padding: "10px 18px", marginBottom: 20,
-            fontSize: "0.85rem", color: "#b91c1c", fontWeight: 600,
-          }}>
-            ⚠️ {rejectedCount} rejected question{rejectedCount !== 1 ? "s" : ""} to retry
-          </div>
+              Your journey is complete. Please contact your admin for next steps.
+            </div>
+            <div style={{
+              background: "#dcfce7", borderRadius: 10,
+              padding: "10px 18px", marginBottom: 24,
+              fontSize: "0.85rem", color: "#15803d", fontWeight: 600,
+            }}>
+              🏆 All levels passed — training complete!
+            </div>
+            <button
+              onClick={onLogout}
+              style={{
+                width: "100%", padding: "12px 0", borderRadius: 10, border: "none",
+                background: "#16a34a", color: "#fff",
+                fontWeight: 800, fontSize: "0.95rem", cursor: "pointer",
+              }}
+            >
+              🚪 Exit &amp; Logout
+            </button>
+          </>
         )}
-        {isApproved && (
-          <div style={{
-            background: "#dcfce7", borderRadius: 10,
-            padding: "10px 18px", marginBottom: 20,
-            fontSize: "0.85rem", color: "#15803d", fontWeight: 600,
-          }}>
-            ✅ Promoted: {currentLevel} → {nextLevel || "Next Level"}
-          </div>
+
+        {/* ── REEXAM / APPROVED MODE (unchanged) ── */}
+        {!isCompleted && (
+          <>
+            <div style={{ fontSize: "3rem", marginBottom: 12 }}>
+              {isApproved ? "🚀" : "🔁"}
+            </div>
+            <div style={{
+              fontSize: "1.2rem", fontWeight: 800,
+              color: isApproved ? "#166534" : "#991b1b",
+              marginBottom: 8,
+            }}>
+              {isApproved ? "Test Approved!" : "Re-Exam Required"}
+            </div>
+            <div style={{ fontSize: "0.92rem", color: "#475569", marginBottom: 20, lineHeight: 1.6 }}>
+              {isApproved ? (
+                <>
+                  Congratulations! All your answers have been approved.
+                  <br />
+                  You have been promoted from <strong>{currentLevel}</strong> to{" "}
+                  <strong style={{ color: "#16a34a" }}>{nextLevel || "the next level"}</strong>.
+                  <br /><br />
+                  New questions for <strong>{nextLevel}</strong> are ready for you.
+                </>
+              ) : (
+                <>
+                  You have{" "}
+                  <strong style={{ color: "#dc2626", fontSize: "1.1rem" }}>{rejectedCount}</strong>{" "}
+                  question{rejectedCount !== 1 ? "s" : ""} that need re-examination.
+                  <br /><br />
+                  Only your rejected questions will be shown. Please complete your pending test.
+                </>
+              )}
+            </div>
+            {isReExam && (
+              <div style={{
+                background: "#fee2e2", borderRadius: 10,
+                padding: "10px 18px", marginBottom: 20,
+                fontSize: "0.85rem", color: "#b91c1c", fontWeight: 600,
+              }}>
+                ⚠️ {rejectedCount} rejected question{rejectedCount !== 1 ? "s" : ""} to retry
+              </div>
+            )}
+            {isApproved && (
+              <div style={{
+                background: "#dcfce7", borderRadius: 10,
+                padding: "10px 18px", marginBottom: 20,
+                fontSize: "0.85rem", color: "#15803d", fontWeight: 600,
+              }}>
+                ✅ Promoted: {currentLevel} → {nextLevel || "Next Level"}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 12 }}>
+              <button
+                onClick={onProceed}
+                style={{
+                  flex: 1, padding: "12px 0", borderRadius: 10, border: "none",
+                  background: isApproved ? "#16a34a" : "#dc2626",
+                  color: "#fff", fontWeight: 800, fontSize: "0.95rem", cursor: "pointer",
+                }}
+              >
+                {isApproved ? "🚀 Start Next Level" : "▶ Start Re-Exam"}
+              </button>
+              <button
+                onClick={onLogout}
+                style={{
+                  flex: 1, padding: "12px 0", borderRadius: 10,
+                  border: "1.5px solid #e2e8f0", background: "#f8fafc",
+                  color: "#475569", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer",
+                }}
+              >
+                🚪 Logout
+              </button>
+            </div>
+          </>
         )}
-        <div style={{ display: "flex", gap: 12 }}>
-          <button
-            onClick={onProceed}
-            style={{
-              flex: 1, padding: "12px 0", borderRadius: 10, border: "none",
-              background: isApproved ? "#16a34a" : "#dc2626",
-              color: "#fff", fontWeight: 800, fontSize: "0.95rem", cursor: "pointer",
-            }}
-          >
-            {isApproved ? "🚀 Start Next Level" : "▶ Start Re-Exam"}
-          </button>
-          <button
-            onClick={onLogout}
-            style={{
-              flex: 1, padding: "12px 0", borderRadius: 10,
-              border: "1.5px solid #e2e8f0", background: "#f8fafc",
-              color: "#475569", fontWeight: 700, fontSize: "0.9rem", cursor: "pointer",
-            }}
-          >
-            🚪 Logout
-          </button>
-        </div>
+
       </div>
     </div>
   );
@@ -642,11 +677,9 @@ function QuestionCard({
   const [zoomImg, setZoomImg] = useState(null);
   const fileInputRef = useRef(null);
 
-  // ✅ FIX 1: Stable blob URLs — generated once per file list, not on every render.
   const currentFiles   = answerImages[current] || [];
   const answerPreviews = useObjectUrls(currentFiles);
 
-  // ✅ FIX 2: Memoize imageUrls so ImagePreviewPanel doesn't get false resets
   const imageUrls = useMemo(
     () => (questions[current]?.imageNames || []).map(
       name => `${IMG_BASE_URL}/Upload/Questions/${questions[current]?.id}/${name}`
@@ -660,13 +693,11 @@ function QuestionCard({
   const q      = questions[current];
   const isLast = current === questions.length - 1;
 
-  // Detect if any current files are audio
   const hasAudioFiles = currentFiles.some(f =>
     f.type.startsWith("audio/") || /\.(mp3|wav|webm|ogg)$/i.test(f.name)
   );
   const hasImageFiles = currentFiles.some(f => f.type.startsWith("image/"));
 
-  // ── Handle mic recording: add audio File to existing images array ──
   const handleMicRecording = (audioFile) => {
     onAnswerImage([audioFile]);
   };
@@ -675,7 +706,6 @@ function QuestionCard({
     <>
       <div className="tm-question-row" key={cardKey}>
         <div className="tm-card">
-          {/* ── Question meta ── */}
           <div className="tm-q-meta">
             <span className="tm-q-num">Question {current + 1} of {questions.length}</span>
             <span className="tm-sep">·</span>
@@ -693,7 +723,6 @@ function QuestionCard({
                 </span>
               </>
             )}
-            {/* ── Answered status badge ── */}
             {answers[current] !== null || (answerTexts[current] && answerTexts[current].trim()) ? (
               <span className="tm-badge" style={{
                 background: "rgba(34,197,94,0.12)", color: "#22c55e", borderColor: "rgba(34,197,94,0.2)",
@@ -709,10 +738,8 @@ function QuestionCard({
             )}
           </div>
 
-          {/* ── Question text ── */}
           <div className="tm-q-text">{q.text}</div>
 
-          {/* ── Remarks note ── */}
           {q.questionRemarks && q.questionRemarks.trim() && (
             <div className="tm-q-remarks-note">
               <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" style={{ flexShrink: 0, marginTop: 1 }}>
@@ -723,7 +750,6 @@ function QuestionCard({
             </div>
           )}
 
-          {/* ── MCQ Options ── */}
           <div className="tm-options">
             {q.options.map((opt, i) => (
               <button
@@ -737,7 +763,6 @@ function QuestionCard({
             ))}
           </div>
 
-          {/* ── Manual text input ── */}
           {q.optionType === "manual" && (
             <div style={{ marginTop: 16 }}>
               <textarea
@@ -750,13 +775,8 @@ function QuestionCard({
             </div>
           )}
 
-          {/* ══════════════════════════════════════════════
-              ATTACHMENT SECTION — Images + Mic
-          ══════════════════════════════════════════════ */}
           <div style={{ marginTop: 20 }}>
-            <div style={{
-              display: "flex", alignItems: "center", gap: 8, marginBottom: 12,
-            }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <span style={{
                 fontSize: "0.82rem", color: "var(--text-dim)",
                 fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em",
@@ -771,13 +791,11 @@ function QuestionCard({
               </span>
             </div>
 
-            {/* ── Attachment area: two columns ── */}
             <div style={{
               display: "grid",
               gridTemplateColumns: "1fr auto",
               gap: 14, alignItems: "start",
             }}>
-              {/* Left: image upload area */}
               <div>
                 <input
                   ref={fileInputRef}
@@ -798,7 +816,6 @@ function QuestionCard({
                       return (
                         <div key={idx} style={{ position: "relative", display: "inline-block" }}>
                           {isAudio ? (
-                            /* Audio file preview chip */
                             <div style={{
                               display: "flex", alignItems: "center", gap: 6,
                               background: "rgba(99,102,241,0.1)",
@@ -854,7 +871,6 @@ function QuestionCard({
                 )}
               </div>
 
-              {/* Right: mic recorder */}
               <div style={{
                 borderLeft: "1.5px solid rgba(255,255,255,0.07)",
                 paddingLeft: 14,
@@ -867,7 +883,6 @@ function QuestionCard({
             </div>
           </div>
 
-          {/* ── Navigation ── */}
           <div className="tm-nav-row">
             <div />
             {!isLast ? (
@@ -975,9 +990,6 @@ function LoadingScreen({ message = "Loading questions..." }) {
 
 // ─────────────────────────────────────────
 // UPLOAD HELPER
-// Uploads ALL files for one question in a SINGLE multipart request.
-// Folder: /Upload/User/{empId}/{questionId}/{filename}
-// Returns comma-separated relative paths, or "" on fail.
 // ─────────────────────────────────────────
 async function uploadAnswerImages(files, empId, questionId) {
   if (!files || files.length === 0) return "";
@@ -1016,7 +1028,7 @@ export default function TestMaster() {
   const [current,      setCurrent]      = useState(0);
   const [answers,      setAnswers]      = useState([]);
   const [answerTexts,  setAnswerTexts]  = useState([]);
-  const [answerImages, setAnswerImages] = useState([]);   // answerImages[i] = File[]
+  const [answerImages, setAnswerImages] = useState([]);
   const [cardKey,      setCardKey]      = useState(0);
   const [showModal,    setShowModal]    = useState(false);
   const [submitted,    setSubmitted]    = useState(false);
@@ -1118,6 +1130,8 @@ export default function TestMaster() {
 
   // ─────────────────────────────────────────
   // LOAD FRESH QUESTIONS
+  // FIX 2: Removed duplicate mountQuestions call and orphaned comment block
+  // FIX 3: Empty API response now sets popupMode="completed" instead of throwing
   // ─────────────────────────────────────────
   const loadFreshQuestions = async (emp) => {
     try {
@@ -1136,7 +1150,13 @@ export default function TestMaster() {
       if (!data.IsSuccess) throw new Error(data.Message || "Failed to load questions");
 
       const list = data.Data3 || [];
-      if (!list.length) throw new Error("No questions found for your level. Please contact your admin.");
+
+      // Empty array = no more levels exist → all levels completed
+      if (!list.length) {
+        setPopupMode("completed");
+        setLoading(false);
+        return;
+      }
 
       mountQuestions(list);
     } finally {
@@ -1231,7 +1251,6 @@ export default function TestMaster() {
       const empId = emp?.id || 0;
       const now   = new Date().toISOString();
 
-      // ── Step 1: Upload images/audio — ONE batch call per question ──
       const uploadedImgPaths = await Promise.all(
         questions.map(async (q, i) => {
           const files = answerImages[i] || [];
@@ -1240,7 +1259,6 @@ export default function TestMaster() {
         })
       );
 
-      // ── Step 2: Build answer list with ImgUrl populated ──
       const answerList = questions.map((q, i) => {
         const startTime = questionStartTimes.current[i] || now;
         const endTime   = now;
@@ -1267,7 +1285,6 @@ export default function TestMaster() {
         };
       });
 
-      // ── Step 3: Submit answers to TestMaster ──
       const res  = await fetch(`${API_BASE}/TestMaster`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -1337,7 +1354,8 @@ export default function TestMaster() {
 
   return (
     <>
-      {(popupMode === "reexam" || popupMode === "approved") && (
+      {/* FIX 4: Added "completed" to popup render condition */}
+      {(popupMode === "reexam" || popupMode === "approved" || popupMode === "completed") && (
         <StatusPopup
           mode={popupMode}
           rejectedCount={rejectedCount}
@@ -1370,7 +1388,7 @@ export default function TestMaster() {
           )}
 
           <main className="tm-main">
-            {questions.length === 0 && (
+            {questions.length === 0 && !popupMode && (
               <div className="tm-error">⚠️ No questions available. Please contact your admin.</div>
             )}
 

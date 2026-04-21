@@ -303,6 +303,7 @@ export default function EmployeeDashboard() {
   const completedCount = resolvedLevels.filter(l => l.status === "completed").length;
   const totalCount     = resolvedLevels.length;
   const progressPct    = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const allLevelsDone  = totalCount > 0 && completedCount === totalCount;
 
   // ── Render ───────────────────────────────────────────────────
   return (
@@ -349,6 +350,30 @@ export default function EmployeeDashboard() {
               <div className="ed-prog-track">
                 <div className="ed-prog-fill" style={{ width: `${progressPct}%` }} />
               </div>
+
+              {/* ── All Levels Completed Banner ── */}
+              {allLevelsDone && (
+                <div style={{
+                  margin: "12px 0 8px",
+                  padding: "18px 24px",
+                  borderRadius: 14,
+                  background: "linear-gradient(135deg, #dcfce7, #bbf7d0)",
+                  border: "1.5px solid #86efac",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 14,
+                }}>
+                  <span style={{ fontSize: "2rem" }}>🎉</span>
+                  <div>
+                    <div style={{ fontSize: "1.05rem", fontWeight: 800, color: "#14532d" }}>
+                      All Levels Completed!
+                    </div>
+                    <div style={{ fontSize: "0.85rem", color: "#166534", marginTop: 2 }}>
+                      Congratulations — you have successfully completed all training levels.
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* ── Stats strip ── */}
               <div className="ed-stats">
