@@ -350,53 +350,57 @@ function MultiImageUpload({
             Saved ({totalSaved})
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {uploadedNames.map((name, idx) => (
-              <div key={idx} style={{ position: "relative", width: 80, height: 80 }}>
-                <img
-                  src={`${BASE_URL}/Upload/Questions/${name}`}
-                  alt={name}
-                  style={{
-                    width: 80, height: 80, objectFit: "cover",
-                    borderRadius: 8,
-                    border: "2px solid #22c55e",
-                    cursor: "zoom-in",
-                  }}
-                  onDoubleClick={() => onZoom(`${BASE_URL}/Upload/Questions/${name}`)}
-                  title="Double-click to zoom"
-                  onError={(e) => {
-                    // fallback if image not found
-                    e.target.style.display = "none";
-                  }}
-                />
-                {/* Saved label */}
-                <div style={{
-                  position: "absolute", bottom: 0, left: 0, right: 0,
-                  background: "rgba(34,197,94,0.85)", color: "#fff",
-                  fontSize: "0.5rem", padding: "2px 3px",
-                  borderRadius: "0 0 6px 6px",
-                  overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  textAlign: "center",
-                }}>
-                  ✅ {name}
+            {uploadedNames.map((name, idx) => {
+              // FIX: both src and onDoubleClick now include editId in the path
+              const savedUrl = `${BASE_URL}/Upload/Questions/${editId}/${name}`;
+              return (
+                <div key={idx} style={{ position: "relative", width: 80, height: 80 }}>
+                  <img
+                    src={savedUrl}
+                    alt={name}
+                    style={{
+                      width: 80, height: 80, objectFit: "cover",
+                      borderRadius: 8,
+                      border: "2px solid #22c55e",
+                      cursor: "zoom-in",
+                    }}
+                    onDoubleClick={() => onZoom(savedUrl)}
+                    title="Double-click to zoom"
+                    onError={(e) => {
+                      // fallback if image not found
+                      e.target.style.display = "none";
+                    }}
+                  />
+                  {/* Saved label */}
+                  <div style={{
+                    position: "absolute", bottom: 0, left: 0, right: 0,
+                    background: "rgba(34,197,94,0.85)", color: "#fff",
+                    fontSize: "0.5rem", padding: "2px 3px",
+                    borderRadius: "0 0 6px 6px",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    textAlign: "center",
+                  }}>
+                    ✅ {name}
+                  </div>
+                  {/* Remove button */}
+                  <button
+                    type="button"
+                    onClick={() => removeSaved(name)}
+                    style={{
+                      position: "absolute", top: -7, right: -7,
+                      background: "#ef4444", color: "#fff",
+                      border: "2px solid #fff", borderRadius: "50%",
+                      width: 20, height: 20, cursor: "pointer",
+                      fontSize: "0.65rem", fontWeight: 800,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      padding: 0, lineHeight: 1,
+                    }}
+                  >
+                    ✕
+                  </button>
                 </div>
-                {/* Remove button */}
-                <button
-                  type="button"
-                  onClick={() => removeSaved(name)}
-                  style={{
-                    position: "absolute", top: -7, right: -7,
-                    background: "#ef4444", color: "#fff",
-                    border: "2px solid #fff", borderRadius: "50%",
-                    width: 20, height: 20, cursor: "pointer",
-                    fontSize: "0.65rem", fontWeight: 800,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    padding: 0, lineHeight: 1,
-                  }}
-                >
-                  ✕
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -482,25 +486,6 @@ export default function QuestionMaster() {
   };
 
   // ── LOAD ROLES ───────────────────────────────────────────
-  // const loadRoles = async () => {
-  //   try {
-  //     const res = await fetch(`${BASE_URL}/api/SupportApp/GetRoles`, {
-  //       method: "GET",
-  //       headers: { "Content-Type": "application/json" },
-  //     });
-  //     if (!res.ok) {
-  //       console.error("GetRoles HTTP Error:", res.status);
-  //       return;
-  //     }
-  //     const data = await res.json();
-  //     if (data.IsSuccess && Array.isArray(data.Data3)) {
-  //       setRoles(data.Data3.map((r) => ({ id: r.Id, roleName: r.RoleName })));
-  //     }
-  //   } catch (err) {
-  //     console.error("GetRoles error:", err);
-  //     showToast("Could not load roles", "warn");
-  //   }
-  // };
   const loadRoles = async () => {
     try {
       // FIX: was method:"GET" → HTTP 405. All endpoints require POST.
