@@ -46,6 +46,9 @@ const fmtDate = (d) => {
 const isAudioUrl = (url) =>
   /\.(mp3|wav|webm|ogg|m4a)(\?.*)?$/i.test(url);
 
+const isVideoUrl = (url) =>
+  /\.(mp4|mov|avi|mkv)(\?.*)?$/i.test(url);
+
 /* ─── Status Badge ─── */
 function StatusBadge({ status }) {
   const map = {
@@ -476,11 +479,59 @@ function CustomAudioPlayer({ src }) {
 }
 
 /* ══════════════════════════════════════════════
-   FILE PREVIEW GRID
+   CUSTOM VIDEO PLAYER
 ══════════════════════════════════════════════ */
+function CustomVideoPlayer({ src }) {
+  const [error, setError] = useState(false);
+
+  if (error) {
+    return (
+      <div style={{
+        display: "flex", alignItems: "center", gap: 6,
+        padding: "6px 10px", borderRadius: 8,
+        background: "#fee2e2", border: "1.5px solid #fca5a5",
+        fontSize: "0.72rem", color: "#b91c1c", fontWeight: 600,
+        minWidth: 140,
+      }}>
+        ⚠️ Video unavailable
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      background: "linear-gradient(135deg,#0f172a,#1e293b)",
+      border: "1.5px solid #334155",
+      borderRadius: 12, padding: 6,
+      maxWidth: 300,
+    }}>
+      <video
+        src={src}
+        controls
+        style={{
+          width: "100%", maxHeight: 200,
+          borderRadius: 8, display: "block",
+          background: "#000",
+        }}
+        onError={() => setError(true)}
+      />
+      <div style={{
+        display: "flex", alignItems: "center", gap: 4, marginTop: 4,
+        fontSize: "0.62rem", color: "#94a3b8", fontWeight: 600,
+        paddingLeft: 2,
+      }}>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/>
+        </svg>
+        Video Recording
+      </div>
+    </div>
+  );
+}
 function FilePreviewGrid({ urls = [], label, onZoom }) {
-  const imageUrls = urls.filter(u => !isAudioUrl(u));
+  const imageUrls = urls.filter(u => !isAudioUrl(u) && !isVideoUrl(u));
   const audioUrls = urls.filter(u => isAudioUrl(u));
+  const videoUrls = urls.filter(u => isVideoUrl(u));
 
   if (urls.length === 0) {
     return (
@@ -513,7 +564,10 @@ function FilePreviewGrid({ urls = [], label, onZoom }) {
         <ImageThumbPanel urls={imageUrls} label="" onZoom={onZoom} />
       )}
       {audioUrls.map((url, idx) => (
-        <CustomAudioPlayer key={idx} src={url} />
+        <CustomAudioPlayer key={`audio-${idx}`} src={url} />
+      ))}
+      {videoUrls.map((url, idx) => (
+        <CustomVideoPlayer key={`video-${idx}`} src={url} />
       ))}
     </div>
   );
@@ -735,7 +789,12 @@ function PromotionBanner({ type, empName, fromLevel, toLevel }) {
 /* ══════════════════════════════════════════════
    REVIEW TABLE ROWS (shared between current + history)
 ══════════════════════════════════════════════ */
-function ReviewTableRows({ rows, onZoom, reviewPerson, saving, showToast, onApproveClick, onRejectRow, onUndoRow, isHistory = false }) {
+// remarksMap: { [rowId]: string } — live textarea values from parent state
+// Fix for Bug 1: row.reviewRemarks inside this render function is a SNAPSHOT
+// from when the rows prop was last set. The textarea onChange calls onRowChange
+// which updates reviewRows in the parent, but that does NOT re-render this
+// specific `row` reference. We read from remarksMap (always current) instead.
+function ReviewTableRows({ rows, onZoom, reviewPerson, saving, showToast, onApproveClick, onRejectRow, onUndoRow, onRowChange, remarksMap = {}, isHistory = false }) {
   return rows.map((row, i) => {
     const exampleUrls = (row.exampleImg || "")
       .split(",")
@@ -857,9 +916,22 @@ function ReviewTableRows({ rows, onZoom, reviewPerson, saving, showToast, onAppr
                 }}>
                   📝 Manual Review Required
                 </span>
+                <textarea
+                  placeholder="Enter Re-Exam reason (optional)"
+                  value={remarksMap[row.id] ?? row.reviewRemarks ?? ""}
+                  onChange={e => onRowChange && onRowChange(row.id, "reviewRemarks", e.target.value)}
+                  rows={2}
+                  style={{
+                    width: "100%", minWidth: 160,
+                    fontSize: "0.75rem", padding: "5px 8px",
+                    borderRadius: 7, border: "1.5px solid #e2e8f0",
+                    resize: "vertical", color: "#0f172a",
+                    fontFamily: "inherit",
+                  }}
+                />
                 <button
                   className="cp-btn cp-btn--reject cp-btn--sm"
-                  onClick={() => onRejectRow(row, "ReExam")}
+                  onClick={() => onRejectRow({ ...row, reviewRemarks: remarksMap[row.id] ?? row.reviewRemarks ?? "" }, "ReExam")}
                   disabled={saving}
                 >
                   ✗ Mark as Wrong
@@ -878,11 +950,27 @@ function ReviewTableRows({ rows, onZoom, reviewPerson, saving, showToast, onAppr
                 >
                   ✅ Approve
                 </button>
+                <textarea
+                  placeholder="Re-Exam reason (required if rejecting)"
+                  value={remarksMap[row.id] ?? row.reviewRemarks ?? ""}
+                  onChange={e => onRowChange && onRowChange(row.id, "reviewRemarks", e.target.value)}
+                  rows={2}
+                  style={{
+                    width: "100%", minWidth: 160,
+                    fontSize: "0.75rem", padding: "5px 8px",
+                    borderRadius: 7, border: "1.5px solid #fca5a5",
+                    resize: "vertical", color: "#0f172a",
+                    fontFamily: "inherit",
+                    background: "#fff7f7",
+                  }}
+                />
                 <button
                   className="cp-btn cp-btn--reject cp-btn--sm"
                   onClick={() => {
                     if (!reviewPerson.trim()) { showToast("⚠️ Enter Reviewer Name first", "warn"); return; }
-                    onRejectRow(row, "ReExam");
+                    const liveRemark = remarksMap[row.id] ?? row.reviewRemarks ?? "";
+                    if (!liveRemark.trim()) { showToast("⚠️ Enter a Re-Exam reason before rejecting", "warn"); return; }
+                    onRejectRow({ ...row, reviewRemarks: liveRemark }, "ReExam");
                   }}
                   disabled={saving}
                 >
@@ -890,6 +978,28 @@ function ReviewTableRows({ rows, onZoom, reviewPerson, saving, showToast, onAppr
                 </button>
               </div>
             )
+          ) : row.testStatus === "ReExam" ? (
+            /* ── Already ReExam — show reason + undo ── */
+            <div style={{ display: "flex", flexDirection: "column", gap: 5, alignItems: "flex-start" }}>
+              {row.reviewRemarks && (
+                <div style={{
+                  fontSize: "0.72rem", color: "#b91c1c", background: "#fee2e2",
+                  border: "1px solid #fca5a5", borderRadius: 7,
+                  padding: "4px 8px", maxWidth: 180, wordBreak: "break-word",
+                }}>
+                  📝 {row.reviewRemarks}
+                </div>
+              )}
+              <button
+                className="cp-btn cp-btn--ghost cp-btn--sm"
+                style={{ fontSize: "0.72rem" }}
+                onClick={() => onUndoRow(row)}
+                disabled={saving}
+                title="Undo — set back to Pending"
+              >
+                ↩ Undo
+              </button>
+            </div>
           ) : (
             <button
               className="cp-btn cp-btn--ghost cp-btn--sm"
@@ -985,9 +1095,37 @@ export default function CorrectionsPage() {
   /* ── Filter ── */
   const [filterStatus, setFilterStatus]     = useState("All");
 
+  /* ── "Latest" tag: set of employee IDs who submitted today ── */
+  const [todaySubmitters, setTodaySubmitters] = useState(new Set());
+
+  /* ── Live textarea values for ReviewRemarks (keyed by row.id) ──
+     BUG FIX: We cannot rely on updating reviewRows for textarea state because
+     ReviewTableRows re-renders with stale `row` snapshots from the previous
+     render cycle. A separate remarksMap (rowId → string) is always current
+     and is read directly inside ReviewTableRows via the remarksMap prop.      */
+  const [remarksMap, setRemarksMap]         = useState({});
+
   const showToast = (msg, type = "success") => {
     setToast({ msg, type });
     setTimeout(() => setToast(null), 4000);
+  };
+
+  /* ─── UPDATE reviewRemarks IN remarksMap (live textarea state) ─── */
+  const handleRowChange = (rowId, field, value) => {
+    if (field === "reviewRemarks") {
+      setRemarksMap(prev => ({ ...prev, [rowId]: value }));
+    } else {
+      setReviewRows(prev => prev.map(r => r.id === rowId ? { ...r, [field]: value } : r));
+    }
+  };
+
+  /* ─── RESET remarksMap when a new employee is selected ─── */
+  const resetRemarksMap = (rows = []) => {
+    // Pre-populate with any existing ReviewRemarks from the DB so the
+    // already-saved reason shows in the UI immediately on load (Bug 2 fix).
+    const initial = {};
+    rows.forEach(r => { if (r.reviewRemarks) initial[r.id] = r.reviewRemarks; });
+    setRemarksMap(initial);
   };
 
   /* ── Derived Stats (based on full reviewRows for accurate counters) ── */
@@ -1018,21 +1156,47 @@ export default function CorrectionsPage() {
     setSelectedEmp(null);
     setReviewRows([]);
     setActionResult(null);
+    setTodaySubmitters(new Set()); // reset tags on each new search
 
     let list = [...empOptions];
 
-    // Filter by selected employee Id
+    // Filter by selected employee Id (specific employee lookup)
     if (searchName) {
       list = list.filter(e => String(e.id) === String(searchName));
     }
 
-    // Filter by selected role Id
+    // Filter by selected role Id — show ALL employees in that role, no exceptions
     if (searchRole) {
       list = list.filter(e => String(e.roleMasterRefid) === String(searchRole));
     }
 
     setEmployees(list);
-    if (list.length === 0) showToast("⚠️ No employees found", "warn");
+    if (list.length === 0) {
+      showToast("⚠️ No employees found", "warn");
+      return;
+    }
+
+    // ── Background: check which employees submitted today and tag them ──
+    // We fire one SelectTestReview per employee in parallel. The list is
+    // shown immediately; tags appear as each request resolves. The tagging
+    // never removes or reorders employees.
+    const todayStr = new Date().toDateString();
+    list.forEach(emp => {
+      api("/SupportApp/SelectTestReview", { EmployeeMasterRefid: emp.id })
+        .then(res => {
+          if (res.IsSuccess && Array.isArray(res.Data3) && res.Data3.length > 0) {
+            // Find the most recent RefDate for this employee
+            const latestRefDate = res.Data3.reduce((max, r) => {
+              const d = new Date(r.RefDate || r.refDate || 0);
+              return d > max ? d : max;
+            }, new Date(0));
+            if (latestRefDate.toDateString() === todayStr) {
+              setTodaySubmitters(prev => new Set([...prev, emp.id]));
+            }
+          }
+        })
+        .catch(() => { /* silently ignore — tag just won't appear */ });
+    });
   };
 
   /* ─── SELECT EMPLOYEE → LOAD REVIEW DATA ─── */
@@ -1071,6 +1235,7 @@ export default function CorrectionsPage() {
           reviewPersonName:      r.ReviewPersonName,
           reviewUpdateDate:      r.ReviewUpdateDate,
           imgUrl:                r.ImgUrl,
+          reviewRemarks:         r.ReviewRemarks ?? "",
         }));
 
         // ── SHOW ONLY LATEST ATTEMPT ──
@@ -1086,6 +1251,7 @@ export default function CorrectionsPage() {
 
         setReviewRows(latestRows);
         setHistoryRows(rows); // cache full history for History panel
+        resetRemarksMap(latestRows); // pre-populate textarea state from DB values
       } else {
         showToast(`⚠️ ${res.Message || "No test data found for this employee"}`, "warn");
       }
@@ -1106,6 +1272,7 @@ export default function CorrectionsPage() {
         Id:               row.id,
         RowTestStatus:    "Approved",
         AnswerRemarks:    row.answerRemarks || "",
+        ReviewRemarks:    row.reviewRemarks || "",
         ReviewPersonName: reviewPerson.trim(),
       });
       if (res.IsSuccess) {
@@ -1132,6 +1299,7 @@ export default function CorrectionsPage() {
         Id:               row.id,
         RowTestStatus:    status,
         AnswerRemarks:    row.answerRemarks || "",
+        ReviewRemarks:    row.reviewRemarks || "",
         ReviewPersonName: reviewPerson.trim(),
       });
       if (res.IsSuccess) {
@@ -1155,6 +1323,7 @@ export default function CorrectionsPage() {
       Id:               row.id,
       RowTestStatus:    "Submitted",
       AnswerRemarks:    row.answerRemarks || "",
+      ReviewRemarks:    "",
       ReviewPersonName: reviewPerson.trim(),
     });
     if (res.IsSuccess) {
@@ -1182,6 +1351,7 @@ export default function CorrectionsPage() {
           Id:               row.id,
           RowTestStatus:    "Approved",
           AnswerRemarks:    row.answerRemarks || "",
+          ReviewRemarks:    remarksMap[row.id] ?? row.reviewRemarks ?? "",
           ReviewPersonName: reviewPerson.trim(),
         });
       }
@@ -1211,6 +1381,7 @@ export default function CorrectionsPage() {
           Id:               row.id,
           RowTestStatus:    "ReExam",
           AnswerRemarks:    row.answerRemarks || "",
+          ReviewRemarks:    remarksMap[row.id] ?? row.reviewRemarks ?? "",
           ReviewPersonName: reviewPerson.trim(),
         });
       }
@@ -1394,6 +1565,7 @@ export default function CorrectionsPage() {
                 setReviewRows([]); setActionResult(null);
                 setHistoryRows([]); setShowHistory(false);
                 setFilterStatus("All");
+                setTodaySubmitters(new Set());
               }}
             >
               ✕ Clear
@@ -1413,7 +1585,21 @@ export default function CorrectionsPage() {
                     {(emp.employeeName || "?")[0].toUpperCase()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div className="cp-emp-name">{emp.employeeName}</div>
+                    <div className="cp-emp-name" style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                      {emp.employeeName}
+                      {todaySubmitters.has(emp.id) && (
+                        <span style={{
+                          fontSize: "0.62rem", fontWeight: 800,
+                          background: "linear-gradient(135deg,#6366f1,#4f46e5)",
+                          color: "#fff",
+                          padding: "2px 8px", borderRadius: 20,
+                          letterSpacing: "0.04em", whiteSpace: "nowrap",
+                          boxShadow: "0 1px 6px rgba(99,102,241,0.35)",
+                        }}>
+                          ⚡ Latest
+                        </span>
+                      )}
+                    </div>
                     <div className="cp-emp-meta">
                       <RolePill role={emp.roleType} />
                       <span style={{ fontSize: "0.75rem", color: "#64748b" }}>
@@ -1639,6 +1825,8 @@ export default function CorrectionsPage() {
                       onApproveClick={(row) => setReviewModal(row)}
                       onRejectRow={(row, status) => handleReject(row, status)}
                       onUndoRow={(row) => handleUndo(row)}
+                      onRowChange={handleRowChange}
+                      remarksMap={remarksMap}
                       isHistory={false}
                     />
                   </tbody>

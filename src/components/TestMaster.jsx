@@ -5,9 +5,9 @@ import "../TestMaster.css";
 // CONSTANTS
 // ─────────────────────────────────────────
 const OPTION_KEYS  = ["A", "B", "C", "D"];
-// const API_BASE     = "http://localhost:44300/api/SupportApp";
-// const UPLOAD_BASE  = "http://localhost:44300/api/Commonapp/UploadFile";
-// const IMG_BASE_URL = "http://localhost:44300";
+//const API_BASE     = "http://localhost:44300/api/SupportApp";
+//const UPLOAD_BASE  = "http://localhost:44300/api/Commonapp/UploadFile";
+//const IMG_BASE_URL = "http://localhost:44300";
 
 const API_BASE     = "https://testapi.kassapos.co.in/api/SupportApp";
 const UPLOAD_BASE  = "https://testapi.kassapos.co.in/api/Commonapp/UploadFile";
@@ -405,6 +405,80 @@ function StatusPopup({ mode, rejectedCount, nextLevel, currentLevel, onProceed, 
 }
 
 // ─────────────────────────────────────────
+// REEXAM REMARKS POPUP
+// ─────────────────────────────────────────
+function ReExamRemarksPopup({ remarks, onClose }) {
+  if (!remarks || remarks.length === 0) return null;
+  return (
+    <div style={{
+      position: "fixed", inset: 0, zIndex: 10000,
+      background: "rgba(13,27,62,0.82)",
+      backdropFilter: "blur(10px)",
+      display: "flex", alignItems: "center", justifyContent: "center",
+    }}>
+      <div style={{
+        background: "#fff", borderRadius: 20,
+        padding: "32px 36px", maxWidth: 480, width: "92%",
+        boxShadow: "0 20px 80px rgba(0,0,0,0.35)",
+        borderTop: "4px solid #dc2626",
+      }}>
+        <div style={{ fontSize: "2.2rem", textAlign: "center", marginBottom: 10 }}>🔁</div>
+        <div style={{
+          fontSize: "1.15rem", fontWeight: 800,
+          color: "#991b1b", textAlign: "center", marginBottom: 16,
+        }}>
+          Re-Exam Required
+        </div>
+        <div style={{
+          fontSize: "0.85rem", color: "#475569",
+          marginBottom: 16, textAlign: "center",
+        }}>
+          Your reviewer has left the following feedback for your re-exam questions:
+        </div>
+        <div style={{
+          background: "#fff7f7", border: "1.5px solid #fca5a5",
+          borderRadius: 12, padding: "14px 16px",
+          display: "flex", flexDirection: "column", gap: 10,
+          marginBottom: 24, maxHeight: 260, overflowY: "auto",
+        }}>
+          {remarks.map((remark, i) => (
+            <div key={i} style={{
+              display: "flex", gap: 10, alignItems: "flex-start",
+            }}>
+              <span style={{
+                flexShrink: 0, width: 22, height: 22,
+                borderRadius: "50%", background: "#fee2e2",
+                color: "#b91c1c", fontWeight: 800,
+                fontSize: "0.72rem", display: "flex",
+                alignItems: "center", justifyContent: "center",
+              }}>
+                {i + 1}
+              </span>
+              <div style={{
+                fontSize: "0.84rem", color: "#1e293b",
+                fontWeight: 600, lineHeight: 1.5,
+              }}>
+                {remark}
+              </div>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={onClose}
+          style={{
+            width: "100%", padding: "12px 0", borderRadius: 10,
+            border: "none", background: "#dc2626", color: "#fff",
+            fontWeight: 800, fontSize: "0.95rem", cursor: "pointer",
+          }}
+        >
+          ▶ I Understand — Start Re-Exam
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────
 // TOPBAR
 // ─────────────────────────────────────────
 function Topbar({ date, questionCount, employee, isReExam }) {
@@ -697,6 +771,9 @@ function QuestionCard({
     f.type.startsWith("audio/") || /\.(mp3|wav|webm|ogg)$/i.test(f.name)
   );
   const hasImageFiles = currentFiles.some(f => f.type.startsWith("image/"));
+  const hasVideoFiles = currentFiles.some(f =>
+    f.type.startsWith("video/") || /\.(mp4|mov|avi|mkv)$/i.test(f.name)
+  );
 
   const handleMicRecording = (audioFile) => {
     onAnswerImage([audioFile]);
@@ -787,7 +864,7 @@ function QuestionCard({
                 fontSize: "0.75rem", color: "var(--text-dim)", fontWeight: 400,
                 textTransform: "none", letterSpacing: 0,
               }}>
-                (images or voice recording — optional)
+                (images, videos or voice recording — optional)
               </span>
             </div>
 
@@ -800,10 +877,23 @@ function QuestionCard({
                 <input
                   ref={fileInputRef}
                   type="file"
-                  accept="image/*"
+                  accept="image/*,video/mp4,video/webm,video/ogg"
                   multiple
                   style={{ display: "none" }}
+                  // onChange={e => {
+                  //   onAnswerImage(Array.from(e.target.files));
+                  //   e.target.value = "";
+                  // }}
                   onChange={e => {
+                    const MAX_VIDEO_MB = 100;
+                    const oversized = Array.from(e.target.files).find(
+                      f => f.type.startsWith("video/") && f.size > MAX_VIDEO_MB * 1024 * 1024
+                    );
+                    if (oversized) {
+                      alert(`Video file "${oversized.name}" exceeds the ${MAX_VIDEO_MB}MB limit. Please choose a smaller file.`);
+                      e.target.value = "";
+                      return;
+                    }
                     onAnswerImage(Array.from(e.target.files));
                     e.target.value = "";
                   }}
@@ -813,6 +903,7 @@ function QuestionCard({
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                     {currentFiles.map((file, idx) => {
                       const isAudio = file.type.startsWith("audio/") || /\.(mp3|wav|webm|ogg)$/i.test(file.name);
+                      const isVideo = file.type.startsWith("video/") || /\.(mp4|mov|avi|mkv)$/i.test(file.name);
                       return (
                         <div key={idx} style={{ position: "relative", display: "inline-block" }}>
                           {isAudio ? (
@@ -828,6 +919,23 @@ function QuestionCard({
                               </svg>
                               <span style={{ fontSize: "0.72rem", color: "#6366f1", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                                 {file.name}
+                              </span>
+                            </div>
+                          ) : isVideo ? (
+                            <div style={{
+                              display: "flex", flexDirection: "column", gap: 4,
+                              background: "rgba(15,23,42,0.7)",
+                              border: "2px solid rgba(79,142,247,0.4)",
+                              borderRadius: 8, padding: 4,
+                              maxWidth: 200,
+                            }}>
+                              <video
+                                src={answerPreviews[idx]}
+                                style={{ width: 120, height: 80, borderRadius: 6, objectFit: "cover", display: "block" }}
+                                muted
+                              />
+                              <span style={{ fontSize: "0.68rem", color: "#4f8ef7", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingLeft: 2 }}>
+                                🎬 {file.name}
                               </span>
                             </div>
                           ) : (
@@ -866,7 +974,7 @@ function QuestionCard({
                     className="tm-attach-btn"
                     onClick={() => fileInputRef.current?.click()}
                   >
-                    📷 Choose Images
+                    📎 Choose Images / Videos
                   </button>
                 )}
               </div>
@@ -989,7 +1097,7 @@ function LoadingScreen({ message = "Loading questions..." }) {
 }
 
 // ─────────────────────────────────────────
-// UPLOAD HELPER
+// UPLOAD HELPER — images, audio, and video
 // ─────────────────────────────────────────
 async function uploadAnswerImages(files, empId, questionId) {
   if (!files || files.length === 0) return "";
@@ -1040,6 +1148,7 @@ export default function TestMaster() {
   const [isReExamMode,  setIsReExamMode]  = useState(false);
   const [nextLevel,     setNextLevel]     = useState("");
   const [currentLevel,  setCurrentLevel]  = useState("");
+  const [reExamRemarks, setReExamRemarks] = useState([]);
 
   const questionStartTimes = useRef([]);
   const date          = useLiveDate();
@@ -1094,6 +1203,17 @@ export default function TestMaster() {
         const hasSubmittedRows = [...latestStatusByQuestion.values()].some(s => s === "Submitted");
         const allApproved = rows.length > 0 &&
           [...latestStatusByQuestion.values()].every(s => s === "Approved" || s === "Promoted");
+
+        // ── Show ReExam reasons popup if there are remarks ──
+        if (pendingReExamIds.size > 0) {
+          const reExamWithRemarks = rows.filter(
+            r => (r.RowTestStatus ?? r.TestStatus) === "ReExam" &&
+                 r.ReviewRemarks && r.ReviewRemarks.trim()
+          );
+          if (reExamWithRemarks.length > 0) {
+            setReExamRemarks(reExamWithRemarks.map(r => r.ReviewRemarks.trim()));
+          }
+        }
 
         if (pendingReExamIds.size > 0 && !hasSubmittedRows) {
           setRejectedCount(pendingReExamIds.size);
@@ -1405,6 +1525,13 @@ export default function TestMaster() {
 
   return (
     <>
+      {reExamRemarks.length > 0 && (
+        <ReExamRemarksPopup
+          remarks={reExamRemarks}
+          onClose={() => setReExamRemarks([])}
+        />
+      )}
+
       {/* FIX 4: Added "completed" to popup render condition */}
       {(popupMode === "reexam" || popupMode === "approved" || popupMode === "completed") && (
         <StatusPopup
