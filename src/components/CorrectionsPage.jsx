@@ -49,6 +49,14 @@ const isAudioUrl = (url) =>
 const isVideoUrl = (url) =>
   /\.(mp4|mov|avi|mkv)(\?.*)?$/i.test(url);
 
+/* ─── Global keyframe injection (once, not per-render) ─── */
+if (typeof document !== "undefined" && !document.getElementById("cp-global-styles")) {
+  const s = document.createElement("style");
+  s.id = "cp-global-styles";
+  s.textContent = `@keyframes cp-spin { to { transform: rotate(360deg); } }`;
+  document.head.appendChild(s);
+}
+
 /* ─── Status Badge ─── */
 function StatusBadge({ status }) {
   const map = {
@@ -304,29 +312,86 @@ function AnswerCell({ correct, employee, optionType }) {
 
 /* ─── Image Zoom Modal ─── */
 function ZoomModal({ url, onClose }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError,  setImgError]  = useState(false);
+
+  // Reset load state whenever the url changes
+  useEffect(() => {
+    setImgLoaded(false);
+    setImgError(false);
+  }, [url]);
+
+  // Close on Escape key, cleaned up on unmount
+  useEffect(() => {
+    if (!url) return;
+    const handler = (e) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [url, onClose]);
+
   if (!url) return null;
+
   return (
     <div
       onClick={onClose}
       style={{
         position: "fixed", inset: 0, zIndex: 9999,
-        background: "rgba(0,0,0,0.85)",
+        /* backdropFilter removed — GPU-expensive, causes freezes
+           when many inline <style> tags are also in the DOM.    */
+        background: "rgba(0,0,0,0.88)",
         display: "flex", alignItems: "center", justifyContent: "center",
-        backdropFilter: "blur(8px)", cursor: "zoom-out",
+        cursor: "zoom-out",
       }}
     >
-      <div onClick={e => e.stopPropagation()}
-        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
-        <img src={url} alt="Zoomed" style={{
-          maxWidth: "88vw", maxHeight: "80vh", borderRadius: 14,
-          objectFit: "contain", background: "#fff",
-          boxShadow: "0 12px 60px rgba(0,0,0,0.6)",
-        }} />
-        <button onClick={onClose} style={{
-          padding: "9px 32px", borderRadius: 10, border: "none",
-          background: "#fff", color: "#111", fontWeight: 700,
-          fontSize: "0.85rem", cursor: "pointer",
-        }}>✕ Close</button>
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}
+      >
+        {/* Spinner until image fully decoded */}
+        {!imgLoaded && !imgError && (
+          <div style={{
+            width: 52, height: 52, borderRadius: "50%",
+            border: "4px solid rgba(255,255,255,0.2)",
+            borderTopColor: "#fff",
+            animation: "cp-spin 0.75s linear infinite",
+          }} />
+        )}
+
+        {imgError && (
+          <div style={{
+            color: "#fca5a5", fontWeight: 700, fontSize: "0.9rem",
+            background: "rgba(255,255,255,0.08)", padding: "14px 28px",
+            borderRadius: 12,
+          }}>
+            ⚠️ Image failed to load
+          </div>
+        )}
+
+        <img
+          src={url}
+          alt="Zoomed"
+          onLoad={() => setImgLoaded(true)}
+          onError={() => { setImgError(true); setImgLoaded(false); }}
+          style={{
+            maxWidth: "88vw", maxHeight: "80vh", borderRadius: 14,
+            objectFit: "contain", background: "#fff",
+            boxShadow: "0 12px 60px rgba(0,0,0,0.6)",
+            // Hidden until loaded — prevents frozen blank area
+            display: imgLoaded ? "block" : "none",
+          }}
+        />
+
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            padding: "9px 32px", borderRadius: 10, border: "none",
+            background: "#fff", color: "#111", fontWeight: 700,
+            fontSize: "0.85rem", cursor: "pointer",
+          }}
+        >
+          ✕ Close
+        </button>
       </div>
     </div>
   );
@@ -472,8 +537,6 @@ function CustomAudioPlayer({ src }) {
         </svg>
         Voice Recording
       </div>
-
-      <style>{`@keyframes cp-spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
@@ -581,16 +644,20 @@ function ImageThumbPanel({ urls = [], label, onZoom }) {
 
   const urlKey = urls.join("|");
 
+  // Single effect covering both url-set changes and active-index changes.
+  // Previously two separate effects caused a double re-render cascade:
+  // urlKey change → effect 1 fires (setActive+setLoaded+setError) → re-render
+  // → active change → effect 2 fires (setLoaded+setError) → another re-render.
+  // Merging into one effect with [urlKey, active] prevents the cascade.
+  useEffect(() => {
+    setLoaded(false);
+    setError(false);
+  }, [urlKey, active]);
+
+  // Reset active index when the url set itself changes
   useEffect(() => {
     setActive(0);
-    setLoaded(false);
-    setError(false);
   }, [urlKey]);
-
-  useEffect(() => {
-    setLoaded(false);
-    setError(false);
-  }, [active]);
 
   const url = urls[active] || null;
 
@@ -692,8 +759,6 @@ function ImageThumbPanel({ urls = [], label, onZoom }) {
       {!url && (
         <span style={{ fontSize: "0.65rem", color: "#cbd5e1" }}>—</span>
       )}
-
-      <style>{`@keyframes cp-spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
