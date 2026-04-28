@@ -930,6 +930,7 @@ function ReviewTableRows({ rows, onZoom, reviewPerson, saving, showToast, onAppr
                   }}
                 />
                 <button
+                  type="button"
                   className="cp-btn cp-btn--reject cp-btn--sm"
                   onClick={() => onRejectRow({ ...row, reviewRemarks: remarksMap[row.id] ?? row.reviewRemarks ?? "" }, "ReExam")}
                   disabled={saving}
@@ -941,6 +942,7 @@ function ReviewTableRows({ rows, onZoom, reviewPerson, saving, showToast, onAppr
               /* ── Normal Approve / Reject ── */
               <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
                 <button
+                  type="button"
                   className="cp-btn cp-btn--approve cp-btn--sm"
                   onClick={() => {
                     if (!reviewPerson.trim()) { showToast("⚠️ Enter Reviewer Name first", "warn"); return; }
@@ -965,6 +967,7 @@ function ReviewTableRows({ rows, onZoom, reviewPerson, saving, showToast, onAppr
                   }}
                 />
                 <button
+                  type="button"
                   className="cp-btn cp-btn--reject cp-btn--sm"
                   onClick={() => {
                     if (!reviewPerson.trim()) { showToast("⚠️ Enter Reviewer Name first", "warn"); return; }
@@ -991,6 +994,7 @@ function ReviewTableRows({ rows, onZoom, reviewPerson, saving, showToast, onAppr
                 </div>
               )}
               <button
+                type="button"
                 className="cp-btn cp-btn--ghost cp-btn--sm"
                 style={{ fontSize: "0.72rem" }}
                 onClick={() => onUndoRow(row)}
@@ -1002,6 +1006,7 @@ function ReviewTableRows({ rows, onZoom, reviewPerson, saving, showToast, onAppr
             </div>
           ) : (
             <button
+              type="button"
               className="cp-btn cp-btn--ghost cp-btn--sm"
               style={{ fontSize: "0.72rem" }}
               onClick={() => onUndoRow(row)}
@@ -1966,6 +1971,7 @@ export default function CorrectionsPage() {
             </div>
             <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
               <button
+                type="button"
                 className="cp-btn cp-btn--approve"
                 style={{ flex: 1 }}
                 onClick={() => handleApprove(reviewModal)}
@@ -1974,6 +1980,7 @@ export default function CorrectionsPage() {
                 {saving ? "Saving…" : "✅ Confirm Approve"}
               </button>
               <button
+                type="button"
                 className="cp-btn cp-btn--ghost"
                 style={{ flex: 1 }}
                 onClick={() => setReviewModal(null)}
@@ -2041,6 +2048,7 @@ export default function CorrectionsPage() {
 
             <div style={{ display: "flex", gap: 12 }}>
               <button
+                type="button"
                 className="cp-btn"
                 style={{
                   flex: 1,
@@ -2055,6 +2063,7 @@ export default function CorrectionsPage() {
                 {saving ? "Processing…" : allApproved ? "🚀 Confirm Promote" : "🔁 Confirm Re-Exam"}
               </button>
               <button
+                type="button"
                 className="cp-btn cp-btn--ghost"
                 style={{ flex: 1 }}
                 onClick={() => setFinalizeModal(false)}
